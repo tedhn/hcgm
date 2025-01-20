@@ -1,9 +1,11 @@
-import Link from "next/link";
 
-import { LatestPost } from "~/app/_components/post";
+import { redirect } from "next/navigation";
+
 import { api, HydrateClient } from "~/trpc/server";
 
 export default async function Home() {
+  redirect("/auth/login");
+
   const users = await api.user.getAll();
 
   return (
@@ -11,6 +13,7 @@ export default async function Home() {
       {users.map((user) => (
         <div key={user.id}>{user.email}</div>
       ))}
+      asdf
     </HydrateClient>
   );
 }
