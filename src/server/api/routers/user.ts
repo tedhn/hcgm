@@ -16,6 +16,55 @@ export const userRouter = createTRPCRouter({
     return { admin, customers } as { admin: Admin[]; customers: Customer[] };
   }),
 
+
+  edit: 
+  publicProcedure  
+  .input(z.object({ name: z.string() }))
+    .mutation(async ({ input }) => {
+      
+      
+      
+      // do something here
+      
+
+
+      // return back the edited user
+      return {
+        name: input.name,
+      };
+    }),
+
+  delete: publicProcedure
+    .input(z.object({id:z.string()})) // validate email format
+    .mutation(async ({ input, ctx }) => {
+      // Check if the admin exists
+      const user = await ctx.db.admin.findFirst({
+        where: { id: input.id},
+      });
+
+      // check if the user is found
+      if (!user) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "User not found",
+        });
+      }
+
+      // Delete the user
+      await ctx.db.admin.delete({
+        where: { email: input.id },
+      });
+
+      return {
+        success: true,
+        message: `User with email ${input.id} deleted successfully.`,
+      };
+    }),
+    
+  
+    
+
+
   login: publicProcedure.input(LoginSchema).mutation(async ({ input, ctx }) => {
     console.log("input", input);
 
