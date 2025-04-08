@@ -5,7 +5,7 @@ const DashboardPage = () => {
     <div>
       <h1>Dashboard</h1>
       <h1>wallace was here</h1>
-      <h1>ben was here</h1>
+      <h1>ben was here updated 2</h1>
     </div>
   );
 };
