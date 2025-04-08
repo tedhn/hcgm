@@ -1,12 +1,13 @@
 -- CreateTable
 CREATE TABLE "Admin" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "created_at" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "id" SERIAL NOT NULL,
+    "code" TEXT DEFAULT '',
     "name" TEXT DEFAULT '',
-    "password" TEXT DEFAULT '',
     "email" TEXT DEFAULT '',
     "phone" TEXT DEFAULT '',
     "role" TEXT DEFAULT '',
+    "password" TEXT DEFAULT '',
+    "created_at" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Admin_pkey" PRIMARY KEY ("id")
 );
@@ -14,9 +15,8 @@ CREATE TABLE "Admin" (
 -- CreateTable
 CREATE TABLE "Customer" (
     "id" SERIAL NOT NULL,
-    "created_at" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "code" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
+    "code" TEXT NOT NULL DEFAULT '',
+    "name" TEXT NOT NULL DEFAULT '',
     "ssmRegistrationNo" TEXT DEFAULT '',
     "taxIdentificationNo" TEXT DEFAULT '',
     "sstNo" TEXT DEFAULT '',
@@ -26,9 +26,10 @@ CREATE TABLE "Customer" (
     "email" TEXT DEFAULT '',
     "phoneNo" TEXT DEFAULT '',
     "address" TEXT DEFAULT '',
-    "creditTerm" TEXT DEFAULT '',
-    "adminId" INTEGER DEFAULT 0,
-    "creditLimit" DOUBLE PRECISION DEFAULT 0,
+    "creditTerm" TEXT NOT NULL DEFAULT '',
+    "adminId" INTEGER NOT NULL DEFAULT 0,
+    "creditLimit" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "created_at" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Customer_pkey" PRIMARY KEY ("id")
 );
@@ -36,12 +37,12 @@ CREATE TABLE "Customer" (
 -- CreateTable
 CREATE TABLE "Product" (
     "id" SERIAL NOT NULL,
-    "code" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "category" TEXT NOT NULL,
-    "baseUom" TEXT NOT NULL,
-    "stock" INTEGER NOT NULL,
-    "unitPrice" DOUBLE PRECISION NOT NULL,
+    "code" TEXT NOT NULL DEFAULT '',
+    "name" TEXT NOT NULL DEFAULT '',
+    "category" TEXT NOT NULL DEFAULT '',
+    "baseUom" TEXT NOT NULL DEFAULT '',
+    "stock" INTEGER NOT NULL DEFAULT 0,
+    "unitPrice" DOUBLE PRECISION NOT NULL DEFAULT 0,
 
     CONSTRAINT "Product_pkey" PRIMARY KEY ("id")
 );
@@ -64,17 +65,22 @@ CREATE TABLE "Transaction" (
     CONSTRAINT "Transaction_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "Transaction_Detail" (
+    "id" SERIAL NOT NULL,
+    "transactionId" INTEGER NOT NULL,
+    "ProductId" INTEGER NOT NULL,
+    "qty" INTEGER NOT NULL,
+    "unitPrice" DOUBLE PRECISION NOT NULL,
+
+    CONSTRAINT "Transaction_Detail_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "Admin_email_key" ON "Admin"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Customer_code_key" ON "Customer"("code");
-
--- CreateIndex
 CREATE UNIQUE INDEX "Customer_email_key" ON "Customer"("email");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Product_code_key" ON "Product"("code");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Transaction_docNum_key" ON "Transaction"("docNum");
