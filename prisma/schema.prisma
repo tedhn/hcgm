@@ -8,10 +8,56 @@ datasource db {
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model user {
+model Admin {
   id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   created_at DateTime @default(now()) @db.Timestamptz(6)
-  name       String?
-  password   String?
-  email      String?  @unique
+  name       String?  @default("")
+  password   String?  @default("")
+  email      String?  @unique @default("")
+  phone      String?  @default("")
+  role       String?  @default("")
+}
+
+model Customer {
+  id                  Int      @id @default(autoincrement())
+  created_at          DateTime @default(now()) @db.Timestamptz(6)
+  code                String   @unique
+  name                String
+  ssmRegistrationNo   String?  @default("")
+  taxIdentificationNo String?  @default("")
+  sstNo               String?  @default("")
+  msicCode            String?  @default("")
+  businessNature      String?  @default("")
+  picName             String?  @default("")
+  email               String?  @unique @default("")
+  phoneNo             String?  @default("")
+  address             String?  @default("")
+  creditTerm          String?  @default("")
+  adminId             Int?     @default(0)
+  creditLimit         Float?   @default(0)
+}
+
+model Product {
+  id        Int    @id @default(autoincrement())
+  code      String @unique
+  name      String
+  category  String
+  baseUom   String
+  stock     Int
+  unitPrice Float
+}
+
+model Transaction {
+  id              Int       @id @default(autoincrement())
+  docNum          String    @unique
+  transactionDate DateTime
+  customerId      Int
+  adminId         Int
+  totalPrice      Float
+  refDocNo        String?
+  deliveryDate    DateTime?
+  shippingMethod  String?
+  commission      Float?
+  remark          String?
+  status          String
 }

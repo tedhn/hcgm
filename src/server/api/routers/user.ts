@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
+import type { Admin, Customer } from "~/lib/types";
 
 const LoginSchema = z.object({
   email: z.string().email(),
@@ -9,15 +10,16 @@ const LoginSchema = z.object({
 
 export const userRouter = createTRPCRouter({
   getAll: publicProcedure.query(async ({ ctx }) => {
-    return ctx.db.user.findMany({
-      take: 10,
-    });
+    const admin = await ctx.db.admin.findMany();
+    const customers = await ctx.db.customer.findMany();
+
+    return { admin, customers } as { admin: Admin[]; customers: Customer[] };
   }),
 
   login: publicProcedure.input(LoginSchema).mutation(async ({ input, ctx }) => {
     console.log("input", input);
 
-    const user = await ctx.db.user.findFirst({
+    const user = await ctx.db.admin.findFirst({
       where: {
         email: input.email,
       },

@@ -8,12 +8,11 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
-import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
 import { api } from "~/trpc/react";
 import { LoadingSpinner } from "~/components/ui/loader";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import InputWithLabel from "~/components/ui/input-with-label";
 
 export function LoginForm({
   className,
@@ -53,18 +52,14 @@ export function LoginForm({
         <CardContent>
           <form onSubmit={handleLogin}>
             <div className="flex flex-col gap-6">
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  required
-                  disabled={isPending}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
+              <InputWithLabel label="Email" value={email} setValue={setEmail} />
+
+              <InputWithLabel
+                label="Password"
+                value={password}
+                setValue={setPassword}
+              />
+              {/*             
               <div className="grid gap-2">
                 <div className="flex items-center">
                   <Label htmlFor="password">Password</Label>
@@ -84,7 +79,7 @@ export function LoginForm({
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
-              </div>
+              </div> */}
 
               {error && isError && (
                 <div className="text-xs text-red-500">{error.message}</div>
