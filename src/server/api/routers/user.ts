@@ -16,23 +16,67 @@ export const userRouter = createTRPCRouter({
     return { admin, customers } as { admin: Admin[]; customers: Customer[] };
   }),
 
+  create:publicProcedure
+  .input(
+    z.object({
+      name: z.string().min(1, "Name is required"),
+      email: z.string().email("Invalid email"),
+      password: z.string().min(6, "Password must be at least 6 characters"),
+      phone: z.number().min(10, "Phone Number is invalid"),
+      role: z.string().min(1, "Invalid role"),
+      code: z.string().min(1,"Invalid Code"),
+    })
+  )
 
-  edit: 
-  publicProcedure  
-  .input(z.object({ name: z.string() }))
-    .mutation(async ({ input }) => {
+  .mutation(async ({ input, ctx }) => {
+    // Check if a user with the same email already exists
+    const existingUser = await ctx.db.admin.findFirst({
+      where: { email: input.email },
+    });
+
+    if (existingUser) {
+      throw new TRPCError({
+        code: "CONFLICT",
+        message: "Email is already registered",
+      });
+  }
+
+  const newUser = await ctx.db.admin.create({
+    data: {
+      name: input.name,
+      email: input.email,
+      password: input.password, // For security: consider hashing passwords
+      phone: input.phone,
+      role: input.role,
+      code: input.code,
+    },
+  });
+
+  return {
+    success: true,
+    message: "User created successfully",
+    user: newUser,
+  };
+}),
+
+
+
+//   edit: 
+//   publicProcedure  
+//   .input(z.object({ name: z.string() }))
+//     .mutation(async ({ input }) => {
       
       
       
-      // do something here
+//       // do something here
       
 
 
-      // return back the edited user
-      return {
-        name: input.name,
-      };
-    }),
+//       // return back the edited user
+//       return {
+//         name: input.name,
+//       };
+//     }),
 
   delete: publicProcedure
     .input(z.object({id:z.string()})) // validate email format
