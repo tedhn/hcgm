@@ -7,22 +7,23 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+// / This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Admin {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-  name       String?  @default("")
-  password   String?  @default("")
-  email      String?  @unique @default("")
-  phone      String?  @default("")
-  role       String?  @default("")
+  id          Int           @id @default(autoincrement())
+  code        String?       @default("")
+  name        String?       @default("")
+  email       String?       @unique @default("")
+  phone       String?       @default("")
+  role        String?       @default("")
+  password    String?       @default("")
+  created_at  DateTime      @default(now()) @db.Timestamptz(6)
+  Transaction Transaction[]
 }
 
 model Customer {
   id                  Int      @id @default(autoincrement())
-  created_at          DateTime @default(now()) @db.Timestamptz(6)
-  code                String   @unique
-  name                String
+  code                String   @default("")
+  name                String   @default("")
   ssmRegistrationNo   String?  @default("")
   taxIdentificationNo String?  @default("")
   sstNo               String?  @default("")
@@ -32,32 +33,51 @@ model Customer {
   email               String?  @unique @default("")
   phoneNo             String?  @default("")
   address             String?  @default("")
-  creditTerm          String?  @default("")
-  adminId             Int?     @default(0)
-  creditLimit         Float?   @default(0)
+  creditTerm          String   @default("")
+  adminId             Int      @default(0)
+  creditLimit         Float    @default(0)
+  created_at          DateTime @default(now()) @db.Timestamptz(6)
+
+  Transaction Transaction[]
 }
 
 model Product {
   id        Int    @id @default(autoincrement())
-  code      String @unique
-  name      String
-  category  String
-  baseUom   String
-  stock     Int
-  unitPrice Float
+  code      String @default("")
+  name      String @default("")
+  category  String @default("")
+  baseUom   String @default("")
+  stock     Int  @default(0)
+  unitPrice Float  @default(0)
+
+  Transaction_Detail Transaction_Detail[]
 }
 
 model Transaction {
   id              Int       @id @default(autoincrement())
-  docNum          String    @unique
-  transactionDate DateTime
-  customerId      Int
-  adminId         Int
-  totalPrice      Float
-  refDocNo        String?
+  docNum          String    @default("")
+  transactionDate DateTime  @default(now()) @db.Timestamptz(6)
+  customer        Customer  @relation(fields: [customerId], references: [id])
+  customerId      Int       @default(0)
+  admin           Admin     @relation(fields: [adminId], references: [id])
+  adminId         Int       @default(0)
+  totalPrice      Float     @default(0)
+  refDocNo        String?   @default("")
   deliveryDate    DateTime?
-  shippingMethod  String?
-  commission      Float?
-  remark          String?
-  status          String
+  shippingMethod  String?   @default("")
+  commission      Float?    @default(0)
+  remark          String?   @default("")
+  status          String    @default("")
+
+  Transaction_Detail Transaction_Detail[]
+}
+
+model Transaction_Detail {
+  id            Int         @id @default(autoincrement())
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  transactionId Int
+  product       Product     @relation(fields: [productId], references: [id])
+  productId     Int
+  qty           Int
+  unitPrice     Float
 }
