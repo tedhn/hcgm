@@ -50,17 +50,17 @@ CREATE TABLE "Product" (
 -- CreateTable
 CREATE TABLE "Transaction" (
     "id" SERIAL NOT NULL,
-    "docNum" TEXT NOT NULL,
-    "transactionDate" TIMESTAMP(3) NOT NULL,
-    "customerId" INTEGER NOT NULL,
-    "adminId" INTEGER NOT NULL,
-    "totalPrice" DOUBLE PRECISION NOT NULL,
-    "refDocNo" TEXT,
+    "docNum" TEXT NOT NULL DEFAULT '',
+    "transactionDate" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "customerId" INTEGER NOT NULL DEFAULT 0,
+    "adminId" INTEGER NOT NULL DEFAULT 0,
+    "totalPrice" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "refDocNo" TEXT DEFAULT '',
     "deliveryDate" TIMESTAMP(3),
-    "shippingMethod" TEXT,
-    "commission" DOUBLE PRECISION,
-    "remark" TEXT,
-    "status" TEXT NOT NULL,
+    "shippingMethod" TEXT DEFAULT '',
+    "commission" DOUBLE PRECISION DEFAULT 0,
+    "remark" TEXT DEFAULT '',
+    "status" TEXT NOT NULL DEFAULT '',
 
     CONSTRAINT "Transaction_pkey" PRIMARY KEY ("id")
 );
@@ -69,7 +69,7 @@ CREATE TABLE "Transaction" (
 CREATE TABLE "Transaction_Detail" (
     "id" SERIAL NOT NULL,
     "transactionId" INTEGER NOT NULL,
-    "ProductId" INTEGER NOT NULL,
+    "productId" INTEGER NOT NULL,
     "qty" INTEGER NOT NULL,
     "unitPrice" DOUBLE PRECISION NOT NULL,
 
@@ -82,5 +82,14 @@ CREATE UNIQUE INDEX "Admin_email_key" ON "Admin"("email");
 -- CreateIndex
 CREATE UNIQUE INDEX "Customer_email_key" ON "Customer"("email");
 
--- CreateIndex
-CREATE UNIQUE INDEX "Transaction_docNum_key" ON "Transaction"("docNum");
+-- AddForeignKey
+ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_adminId_fkey" FOREIGN KEY ("adminId") REFERENCES "Admin"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Transaction_Detail" ADD CONSTRAINT "Transaction_Detail_transactionId_fkey" FOREIGN KEY ("transactionId") REFERENCES "Transaction"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Transaction_Detail" ADD CONSTRAINT "Transaction_Detail_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

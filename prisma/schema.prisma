@@ -9,20 +9,19 @@ datasource db {
 
 // / This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Admin {
-  id         Int  @id @default(autoincrement())
-  code       String?  @default("")
-  name       String?  @default("")
-  email      String?  @unique @default("")
-  phone      String?  @default("")
-  role       String?  @default("")
-  password   String?  @default("")
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-
+  id          Int           @id @default(autoincrement())
+  code        String?       @default("")
+  name        String?       @default("")
+  email       String?       @unique @default("")
+  phone       String?       @default("")
+  role        String?       @default("")
+  password    String?       @default("")
+  created_at  DateTime      @default(now()) @db.Timestamptz(6)
   Transaction Transaction[]
 }
 
 model Customer {
-  id                  Int   @id @default(autoincrement())
+  id                  Int      @id @default(autoincrement())
   code                String   @default("")
   name                String   @default("")
   ssmRegistrationNo   String?  @default("")
@@ -34,22 +33,22 @@ model Customer {
   email               String?  @unique @default("")
   phoneNo             String?  @default("")
   address             String?  @default("")
-  creditTerm          String  @default("")
-  adminId             Int  @default(0)
-  creditLimit         Float   @default(0)
+  creditTerm          String   @default("")
+  adminId             Int      @default(0)
+  creditLimit         Float    @default(0)
   created_at          DateTime @default(now()) @db.Timestamptz(6)
 
   Transaction Transaction[]
 }
 
 model Product {
-  id        Int      @id @default(autoincrement())
-  code      String   @default("")
-  name      String   @default("")
-  category  String   @default("")
-  baseUom   String   @default("")
-  stock     Int      @default(0)
-  unitPrice Float    @default(0)
+  id        Int    @id @default(autoincrement())
+  code      String @default("")
+  name      String @default("")
+  category  String @default("")
+  baseUom   String @default("")
+  stock     Int  @default(0)
+  unitPrice Float  @default(0)
 
   Transaction_Detail Transaction_Detail[]
 }
@@ -64,7 +63,7 @@ model Transaction {
   adminId         Int       @default(0)
   totalPrice      Float     @default(0)
   refDocNo        String?   @default("")
-  deliveryDate    DateTime? 
+  deliveryDate    DateTime?
   shippingMethod  String?   @default("")
   commission      Float?    @default(0)
   remark          String?   @default("")
@@ -74,11 +73,11 @@ model Transaction {
 }
 
 model Transaction_Detail {
-  id              Int       @id @default(autoincrement())
-  transaction     Transaction @relation(fields: [transactionId], references: [id])
-  transactionId   Int
-  product         Product @relation(fields: [productId], references: [id])
-  productId       Int
-  qty             Int
-  unitPrice       Float
+  id            Int         @id @default(autoincrement())
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  transactionId Int
+  product       Product     @relation(fields: [productId], references: [id])
+  productId     Int
+  qty           Int
+  unitPrice     Float
 }
