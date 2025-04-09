@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
-import type { Admin, Customer } from "~/lib/types";
+import type { Admin } from "~/lib/types";
 
 const LoginSchema = z.object({
   email: z.string().email(),
@@ -17,67 +17,61 @@ export const userRouter = createTRPCRouter({
     return { admin } as { admin: Admin[] };
   }),
 
-  create:publicProcedure
-  .input(
-    z.object({
-      name: z.string().min(1, "Name is required"),
-      email: z.string().email("Invalid email"),
-      password: z.string().min(6, "Password must be at least 6 characters"),
-      phone: z.number().min(10, "Phone Number is invalid"),
-      role: z.string().min(1, "Invalid role"),
-      code: z.string().min(1,"Invalid Code"),
-    })
-  )
+  create: publicProcedure
+    .input(
+      z.object({
+        name: z.string().min(1, "Name is required"),
+        email: z.string().email("Invalid email"),
+        password: z.string().min(6, "Password must be at least 6 characters"),
+        phone: z.number().min(10, "Phone Number is invalid"),
+        role: z.string().min(1, "Invalid role"),
+        code: z.string().min(1, "Invalid Code"),
+      }),
+    )
 
-  .mutation(async ({ input, ctx }) => {
-    // Check if a user with the same email already exists
-    const existingUser = await ctx.db.admin.findFirst({
-      where: { email: input.email },
-    });
-
-    if (existingUser) {
-      throw new TRPCError({
-        code: "CONFLICT",
-        message: "Email is already registered",
+    .mutation(async ({ input, ctx }) => {
+      // Check if a user with the same email already exists
+      const existingUser = await ctx.db.admin.findFirst({
+        where: { email: input.email },
       });
-  }
 
-  const newUser = await ctx.db.admin.create({
-    data: {
-      name: input.name,
-      email: input.email,
-      password: input.password, // For security: consider hashing passwords
-      phone: input.phone,
-      role: input.role,
-      code: input.code,
-    },
-  });
+      if (existingUser) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "Email is already registered",
+        });
+      }
 
-  return {
-    success: true,
-    message: "User created successfully",
-    user: newUser,
-  };
-}),
+      const newUser = await ctx.db.admin.create({
+        data: {
+          name: input.name,
+          email: input.email,
+          password: input.password, // For security: consider hashing passwords
+          phone: input.phone + "",
+          role: input.role,
+          code: input.code,
+        },
+      });
 
+      return {
+        success: true,
+        message: "User created successfully",
+        user: newUser,
+      };
+    }),
 
+  //   edit:
+  //   publicProcedure
+  //   .input(z.object({ name: z.string() }))
+  //     .mutation(async ({ input }) => {
 
-//   edit: 
-//   publicProcedure  
-//   .input(z.object({ name: z.string() }))
-//     .mutation(async ({ input }) => {
-      
-      
-      
-//       // do something here
-      
+  //       // do something here
 
-
-//       // return back the edited user
-//       return {
-//         name: input.name,
-//       };
-//     }),
+  //       // return back the edited user
+  //       return {
+  //         name: input.name,
+  //       };
+  //     }),
 
   delete: publicProcedure
     .input(z.object({ id: z.number() })) // validate email format

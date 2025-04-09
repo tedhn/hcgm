@@ -4,6 +4,7 @@ import BackButton from "~/app/_components/back-button";
 import { Button } from "~/components/ui/button";
 import InputWithLabel from "~/components/ui/input-with-label";
 import { useIsMobile } from "~/hooks/useMobile";
+import { api } from "~/trpc/react";
 
 const CreateUserPage = () => {
   const [code, setCode] = React.useState("");
@@ -12,7 +13,22 @@ const CreateUserPage = () => {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
 
+  const createMutation = api.user.create.useMutation();
+
   const isMobile = useIsMobile();
+
+  const handleCreate = () => {
+    if (!isNaN(+phone)) {
+      createMutation.mutate({
+        name,
+        email,
+        password,
+        phone: +phone,
+        role: "admin",
+        code,
+      });
+    }
+  };
 
   return (
     <div className="w-full px-0 pt-4 lg:px-14">
@@ -21,8 +37,7 @@ const CreateUserPage = () => {
       <h1 className="my-0 mb-10 text-3xl lg:my-10">Create User</h1>
 
       <div className="flex w-full flex-col gap-6 lg:w-fit">
-        <InputWithLabel label="Code" value={name} setValue={setCode} />
-        <InputWithLabel label="Name" value={name} setValue={setName} />
+        <InputWithLabel label="Code" value={code} setValue={setCode} />
         <InputWithLabel label="Name" value={name} setValue={setName} />
         <InputWithLabel label="Phone" value={phone} setValue={setPhone} />
         <InputWithLabel label="Email" value={email} setValue={setEmail} />
@@ -32,7 +47,9 @@ const CreateUserPage = () => {
           setValue={setPassword}
         />
 
-        <Button className="w-fit">Create</Button>
+        <Button className="w-fit" onClick={handleCreate}>
+          Create
+        </Button>
       </div>
     </div>
   );
