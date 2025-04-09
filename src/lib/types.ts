@@ -1,5 +1,5 @@
 export type Admin = {
-  id: string;
+  id: number;
   created_at: Date;
   name?: string;
   password?: string;
@@ -9,7 +9,7 @@ export type Admin = {
 };
 
 export type Customer = {
-  id: number;
+  id:  bigint;
   created_at: Date;
   code: string;
   name: string;
@@ -21,7 +21,10 @@ export type Customer = {
   picName?: string;
   email?: string;
   phoneNo?: string;
-  address?: string;
+  address1?: string;
+  address2?: string;
+  address3?: string;
+  address4?: string;
   creditTerm?: string;
   adminId?: number;
   creditLimit?: number;

@@ -11,9 +11,10 @@ const LoginSchema = z.object({
 export const userRouter = createTRPCRouter({
   getAll: publicProcedure.query(async ({ ctx }) => {
     const admin = await ctx.db.admin.findMany();
-    const customers = await ctx.db.customer.findMany();
+    // const customers = await ctx.db.customer.findMany();
 
-    return { admin, customers } as { admin: Admin[]; customers: Customer[] };
+    //@ts-expeect-error any
+    return { admin } as { admin: Admin[] };
   }),
 
   create:publicProcedure
@@ -79,11 +80,11 @@ export const userRouter = createTRPCRouter({
 //     }),
 
   delete: publicProcedure
-    .input(z.object({id:z.string()})) // validate email format
+    .input(z.object({ id: z.number() })) // validate email format
     .mutation(async ({ input, ctx }) => {
       // Check if the admin exists
       const user = await ctx.db.admin.findFirst({
-        where: { id: input.id},
+        where: { id: +input.id },
       });
 
       // check if the user is found
@@ -96,7 +97,7 @@ export const userRouter = createTRPCRouter({
 
       // Delete the user
       await ctx.db.admin.delete({
-        where: { email: input.id },
+        where: { id: input.id },
       });
 
       return {
@@ -104,10 +105,6 @@ export const userRouter = createTRPCRouter({
         message: `User with email ${input.id} deleted successfully.`,
       };
     }),
-    
-  
-    
-
 
   login: publicProcedure.input(LoginSchema).mutation(async ({ input, ctx }) => {
     console.log("input", input);

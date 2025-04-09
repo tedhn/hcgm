@@ -26,17 +26,29 @@ const UserPage = () => {
 
   const { data: userData, isLoading } = api.user.getAll.useQuery();
 
+  const deleteMutation = api.user.delete.useMutation();
+
   useEffect(() => {
     console.log(typeof api.user.getAll);
     try {
-      if (userData?.admin && userData?.customers) {
+      if (userData?.admin) {
         setAdminData(userData.admin);
-        setCustomerData(userData.customers);
+        // setCustomerData(userData.customers);
       }
     } catch (e) {
       console.log(e);
     }
   }, [userData]);
+
+  const handleDelete = (id: number) => {
+    console.log("delete", id);
+
+    deleteMutation.mutate({ id });
+
+    const newAdminData = adminData.filter((item) => item.id !== id);
+
+    setAdminData(newAdminData);
+  };
 
   const adminColumns: ColumnDef<Admin>[] = [
     {
@@ -60,7 +72,7 @@ const UserPage = () => {
       cell: ({ row }) => {
         const phone = row.original.phone;
 
-        const outputText = phone ? phone : "-";
+        const outputText = phone ?? "-";
 
         return <div>{outputText}</div>;
       },
@@ -117,7 +129,10 @@ const UserPage = () => {
                   <Pencil className="h-2 w-2" />
                   Edit
                 </DropdownMenuItem>
-                <DropdownMenuItem className="text-red-500 focus:bg-red-500/10 focus:text-red-500">
+                <DropdownMenuItem
+                  className="text-red-500 focus:bg-red-500/10 focus:text-red-500"
+                  onClick={() => handleDelete(row.original.id)}
+                >
                   <Trash className="h-2 w-2" />
                   Delete
                 </DropdownMenuItem>
@@ -153,15 +168,15 @@ const UserPage = () => {
       header: "Phone",
       cell: ({ row }) => {
         const phone = row.original.phoneNo;
-        return <div>{phone ? phone : "-"}</div>;
+        return <div>{phone ?? "-"}</div>;
       },
     },
     {
       accessorKey: "address",
       header: "Address",
       cell: ({ row }) => {
-        const address = row.original.address;
-        return <div>{address ? address : "-"}</div>;
+        const address = row.original.address1;
+        return <div>{address ?? "-"}</div>;
       },
     },
     {
