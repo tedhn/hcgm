@@ -1,4 +1,4 @@
-export type Admin = {
+export type UserType = {
   ID: number;
   CREATED_AT: Date;
   NAME?: string;
@@ -6,10 +6,11 @@ export type Admin = {
   EMAIL?: string;
   PHONE?: string;
   ROLE?: string;
+  CODE?: string;
 };
 
 export type Customer = {
-  ID:  bigint;
+  ID: bigint;
   CREATED_AT: Date;
   CODE: string;
   NAME: string;
