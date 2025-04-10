@@ -258,14 +258,14 @@ const UserPage = () => {
           />
         </section>
 
-        <section>
+        {/* <section>
           <h1>Customers</h1>
           <DataTable
             columns={customerColumns}
             data={customerData}
             isLoading={isLoading}
           />
-        </section>
+        </section> */}
       </div>
     </>
   );

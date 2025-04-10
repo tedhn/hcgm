@@ -47,7 +47,7 @@ model Product {
   name      String @default("")
   category  String @default("")
   baseUom   String @default("")
-  stock     Int  @default(0)
+  stock     Float  @default(0)
   unitPrice Float  @default(0)
 
   Transaction_Detail Transaction_Detail[]
