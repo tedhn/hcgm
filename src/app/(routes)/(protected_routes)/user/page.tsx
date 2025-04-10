@@ -16,13 +16,13 @@ import {
 import { Button } from "~/components/ui/button";
 import { MoreHorizontal, Pencil, Trash } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { Admin, Customer } from "~/lib/types";
+import type { UserType, Customer } from "~/lib/types";
 
 const UserPage = () => {
   const current_path = usePathname();
   const router = useRouter();
-  const [adminData, setAdminData] = useState<Admin[]>([]);
-  const [customerData, setCustomerData] = useState<Customer[]>([]);
+  const [adminData, setUserData] = useState<UserType[]>([]);
+  // const [customerData, setCustomerData] = useState<Customer[]>([]);
 
   const { data: userData, isLoading } = api.user.getAll.useQuery();
 
@@ -32,7 +32,7 @@ const UserPage = () => {
     console.log(typeof api.user.getAll);
     try {
       if (userData?.admin) {
-        setAdminData(userData.admin);
+        setUserData(userData.admin);
         // setCustomerData(userData.customers);
       }
     } catch (e) {
@@ -45,12 +45,12 @@ const UserPage = () => {
 
     deleteMutation.mutate({ id });
 
-    const newAdminData = adminData.filter((item) => item.ID !== id);
+    const newUserTypeData = adminData.filter((item) => item.ID !== id);
 
-    setAdminData(newAdminData);
+    setUserData(newUserTypeData);
   };
 
-  const adminColumns: ColumnDef<Admin>[] = [
+  const adminColumns: ColumnDef<UserType>[] = [
     {
       // accessorKey: "id",
       header: "#",
@@ -264,7 +264,7 @@ const UserPage = () => {
         </div>
 
         <section className="pb-8">
-          <h1>Admin</h1>
+          <h1>UserType</h1>
           <DataTable
             columns={adminColumns}
             data={adminData}

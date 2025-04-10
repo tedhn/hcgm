@@ -17,6 +17,15 @@ export const userRouter = createTRPCRouter({
     return { admin } as { admin: UserType[] };
   }),
 
+  getOne: publicProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ input, ctx }) => {
+      const admin = await ctx.db.admin.findFirst({
+        where: { ID: input.id },
+      });
+      return admin;
+    }),
+
   create: publicProcedure
     .input(
       z.object({
@@ -31,9 +40,13 @@ export const userRouter = createTRPCRouter({
 
     .mutation(async ({ input, ctx }) => {
       // Check if a user with the same email already exists
+
+      console.log(input);
       const existingUser = await ctx.db.admin.findFirst({
         where: { EMAIL: input.email },
       });
+
+      console.log(existingUser);
 
       if (existingUser) {
         throw new TRPCError({

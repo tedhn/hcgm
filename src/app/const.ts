@@ -1,4 +1,6 @@
-const RoleType = [
+import type { RoleType } from "~/lib/types";
+
+export const Roles: RoleType[] = [
   { id: 1, name: "Master Admin" },
   { id: 2, name: "General Manager" },
   { id: 3, name: "Manager Account" },

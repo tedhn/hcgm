@@ -60,3 +60,8 @@ export type Transaction_Detail = {
   QTY: number;
   UNIT_PRICE: number;
 };
+
+export interface RoleType {
+  id: number;
+  name: string;
+}

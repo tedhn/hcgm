@@ -1,34 +1,60 @@
 "use client";
-import React from "react";
+import { useRouter } from "next/navigation";
+import React, { useEffect } from "react";
 import BackButton from "~/app/_components/back-button";
+import { Roles } from "~/app/const";
 import { Button } from "~/components/ui/button";
 import InputWithLabel from "~/components/ui/input-with-label";
+import { Label } from "~/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 import { useIsMobile } from "~/hooks/useMobile";
 import { api } from "~/trpc/react";
 
 const CreateUserPage = () => {
+  const router = useRouter();
   const [code, setCode] = React.useState("");
   const [name, setName] = React.useState("");
   const [phone, setPhone] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [role, setRole] = React.useState<string>("");
 
-  const createMutation = api.user.create.useMutation();
+  const { mutate, data, isPending, error, isError } =
+    api.user.create.useMutation();
 
   const isMobile = useIsMobile();
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
+    console.log(role);
+
     if (!isNaN(+phone)) {
-      createMutation.mutate({
+      mutate({
         name,
         email,
         password,
         phone: +phone,
-        role: "admin",
+        role: role.toUpperCase().replaceAll(" ", "_"),
         code,
       });
     }
   };
+
+  useEffect(() => {
+    if (!isPending && data) {
+      if (isError) {
+        console.log(error);
+        return;
+      }
+
+      router.push("/user");
+    }
+  }, [data, isPending, error, isError, router]);
 
   return (
     <div className="w-full px-0 pt-4 lg:px-14">
@@ -41,6 +67,24 @@ const CreateUserPage = () => {
         <InputWithLabel label="Name" value={name} setValue={setName} />
         <InputWithLabel label="Phone" value={phone} setValue={setPhone} />
         <InputWithLabel label="Email" value={email} setValue={setEmail} />
+
+        <div className="grid w-full max-w-sm items-center gap-1.5">
+          <Label>Role</Label>
+
+          <Select value={role} onValueChange={setRole}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Role Type" />
+            </SelectTrigger>
+            <SelectContent>
+              {Roles.map((item) => (
+                <SelectItem key={item.id} value={item.name}>
+                  {item.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         <InputWithLabel
           label="Password"
           value={password}
