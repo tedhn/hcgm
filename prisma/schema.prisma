@@ -9,75 +9,75 @@ datasource db {
 
 // / This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Admin {
-  id          Int           @id @default(autoincrement())
-  code        String?       @default("")
-  name        String?       @default("")
-  email       String?       @unique @default("")
-  phone       String?       @default("")
-  role        String?       @default("")
-  password    String?       @default("")
-  created_at  DateTime      @default(now()) @db.Timestamptz(6)
+  ID          Int           @id @default(autoincrement())
+  CODE        String?       @default("")
+  NAME        String?       @default("")
+  EMAIL       String?       @unique
+  PHONE       String?       @default("")
+  ROLE        String?       @default("")
+  PASSWORD    String?       @default("")
+  CREATED_AT  DateTime      @default(now()) @db.Timestamptz(6)
   Transaction Transaction[]
 }
 
 model Customer {
-  id                  Int      @id @default(autoincrement())
-  code                String   @default("")
-  name                String   @default("")
-  ssmRegistrationNo   String?  @default("")
-  taxIdentificationNo String?  @default("")
-  sstNo               String?  @default("")
-  msicCode            String?  @default("")
-  businessNature      String?  @default("")
-  picName             String?  @default("")
-  email               String?  @unique @default("")
-  phoneNo             String?  @default("")
-  address             String?  @default("")
-  creditTerm          String   @default("")
-  adminId             Int      @default(0)
-  creditLimit         Float    @default(0)
-  created_at          DateTime @default(now()) @db.Timestamptz(6)
+  ID                    Int      @id @default(autoincrement())
+  CODE                  String   @default("")
+  NAME                  String   @default("")
+  SSM_REGISTRATION_NO   String?  @default("")
+  TAX_IDENTIFICATION_NO String?  @default("")
+  SST_NO                String?  @default("")
+  MSIC_CODE             String?  @default("")
+  BUSINESS_NATURE       String?  @default("")
+  PIC_NAME              String?  @default("")
+  EMAIL                 String?  @unique
+  PHONE_NO              String?  @default("")
+  ADDRESS               String?  @default("")
+  CREDIT_TERM           String   @default("")
+  ADMIN_ID              Int      @default(0)
+  CREDIT_LIMIT          Float    @default(0)
+  CREATED_AT            DateTime @default(now()) @db.Timestamptz(6)
 
   Transaction Transaction[]
 }
 
 model Product {
-  id        Int    @id @default(autoincrement())
-  code      String @default("")
-  name      String @default("")
-  category  String @default("")
-  baseUom   String @default("")
-  stock     Float  @default(0)
-  unitPrice Float  @default(0)
+  ID          Int    @id @default(autoincrement())
+  CODE        String @default("")
+  NAME        String @default("")
+  CATEGORY    String @default("")
+  BASE_UOM    String @default("")
+  STOCK       Float  @default(0)
+  UNIT_PRICE  Float  @default(0)
 
   Transaction_Detail Transaction_Detail[]
 }
 
 model Transaction {
-  id              Int       @id @default(autoincrement())
-  docNum          String    @default("")
-  transactionDate DateTime  @default(now()) @db.Timestamptz(6)
-  customer        Customer  @relation(fields: [customerId], references: [id])
-  customerId      Int       @default(0)
-  admin           Admin     @relation(fields: [adminId], references: [id])
-  adminId         Int       @default(0)
-  totalPrice      Float     @default(0)
-  refDocNo        String?   @default("")
-  deliveryDate    DateTime?
-  shippingMethod  String?   @default("")
-  commission      Float?    @default(0)
-  remark          String?   @default("")
-  status          String    @default("")
+  ID                Int       @id @default(autoincrement())
+  DOC_NUM           String    @default("")
+  TRANSACTION_DATE  DateTime  @default(now()) @db.Timestamptz(6)
+  CUSTOMER          Customer  @relation(fields: [CUSTOMER_ID], references: [ID])
+  CUSTOMER_ID       Int       @default(0)
+  ADMIN             Admin     @relation(fields: [ADMIN_ID], references: [ID])
+  ADMIN_ID          Int       @default(0)
+  TOTAL_PRICE       Float     @default(0)
+  REF_DOC_NO        String?   @default("")
+  DELIVERY_DATE     DateTime?
+  SHIPPING_METHOD   String?   @default("")
+  COMISSION         Float?    @default(0)
+  REMARK            String?   @default("")
+  STATUS            String    @default("")
 
   Transaction_Detail Transaction_Detail[]
 }
 
 model Transaction_Detail {
-  id            Int         @id @default(autoincrement())
-  transaction   Transaction @relation(fields: [transactionId], references: [id])
-  transactionId Int
-  product       Product     @relation(fields: [productId], references: [id])
-  productId     Int
-  qty           Int
-  unitPrice     Float
+  ID              Int         @id @default(autoincrement())
+  TRANSACTION     Transaction @relation(fields: [TRANSACTION_ID], references: [ID])
+  TRANSACTION_ID  Int
+  PRODUCT         Product     @relation(fields: [PRODUCT_ID], references: [ID])
+  PRODUCT_ID      Int
+  QTY             Int
+  UNIT_PRICE      Float
 }
