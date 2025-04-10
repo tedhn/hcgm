@@ -60,18 +60,61 @@ export const userRouter = createTRPCRouter({
       };
     }),
 
-  //   edit:
-  //   publicProcedure
-  //   .input(z.object({ name: z.string() }))
-  //     .mutation(async ({ input }) => {
+    edit:publicProcedure
+      .input(
+        z.object({ 
+          id: z.number(),
 
-  //       // do something here
+          // optional so that the admin can choose which data to change
+          name: z.string().min(1, "Name is required").optional(),
+          email: z.string().email("Invalid email").optional(),
+          password: z.string().min(6, "Password must be at least 6 characters").optional(),
+          phone: z.number().min(10, "Phone number is invalid").optional(),
+          role: z.string().min(1, "Invalid role").optional(),
+          code: z.string().min(1, "Invalid Code").optional(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        // finding the user using ID
+        const user = await ctx.db.admin.findUnique({
+          where: { id: input.id },
+        });
+    
+        // if user does not exist, return error message
+        if (!user) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "User not found",
+          });
+        }
 
-  //       // return back the edited user
-  //       return {
-  //         name: input.name,
-  //       };
-  //     }),
+        // an empty object to fill the updated data
+        const updateData: any = {};
+
+        // checking each field to see if any of the data has been updated
+        if (input.name) updateData.name = input.name;
+        if (input.email) updateData.email = input.email;
+        if (input.password) updateData.password = input.password;
+        if (input.phone) updateData.phone = input.phone;
+        if (input.role) updateData.role = input.role;
+        if (input.code) updateData.code = input.code;
+        
+        // update the database using the user id
+        const updatedUser = await ctx.db.admin.update({
+          where: { id: input.id },
+          data: updateData,
+        });
+    
+        // returns true if succesfully updated
+        return {
+          success: true,
+          message: `User with ID ${input.id} updated successfully.`,
+          user: updatedUser,
+        };
+      }),
+
+
+      
 
   delete: publicProcedure
     .input(z.object({ id: z.number() })) // validate email format
