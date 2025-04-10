@@ -32,7 +32,7 @@ export const userRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       // Check if a user with the same email already exists
       const existingUser = await ctx.db.admin.findFirst({
-        where: { email: input.email },
+        where: { EMAIL: input.email },
       });
 
       if (existingUser) {
@@ -44,12 +44,12 @@ export const userRouter = createTRPCRouter({
 
       const newUser = await ctx.db.admin.create({
         data: {
-          name: input.name,
-          email: input.email,
-          password: input.password, // For security: consider hashing passwords
-          phone: input.phone + "",
-          role: input.role,
-          code: input.code,
+          NAME: input.name,
+          EMAIL: input.email,
+          PASSWORD: input.password, // For security: consider hashing passwords
+          PHONE: input.phone + "",
+          ROLE: input.role,
+          CODE: input.code,
         },
       });
 
@@ -78,7 +78,7 @@ export const userRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       // Check if the admin exists
       const user = await ctx.db.admin.findFirst({
-        where: { id: +input.id },
+        where: { ID: +input.id },
       });
 
       // check if the user is found
@@ -91,7 +91,7 @@ export const userRouter = createTRPCRouter({
 
       // Delete the user
       await ctx.db.admin.delete({
-        where: { id: input.id },
+        where: { ID: input.id },
       });
 
       return {
@@ -105,7 +105,7 @@ export const userRouter = createTRPCRouter({
 
     const user = await ctx.db.admin.findFirst({
       where: {
-        email: input.email,
+        EMAIL: input.email,
       },
     });
 
@@ -116,7 +116,7 @@ export const userRouter = createTRPCRouter({
       });
     }
 
-    if (user.password !== input.password) {
+    if (user.PASSWORD !== input.password) {
       throw new TRPCError({
         code: "UNAUTHORIZED",
         message: "Invalid password",

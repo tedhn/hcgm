@@ -1,56 +1,61 @@
 export type Admin = {
-  id: number;
-  created_at: Date;
-  name?: string;
-  password?: string;
-  email?: string;
-  phone?: string;
-  role?: string;
+  ID: number;
+  CREATED_AT: Date;
+  NAME?: string;
+  PASSWORD?: string;
+  EMAIL?: string;
+  PHONE?: string;
+  ROLE?: string;
 };
 
 export type Customer = {
-  id:  bigint;
-  created_at: Date;
-  code: string;
-  name: string;
-  ssmRegistrationNo?: string;
-  taxIdentificationNo?: string;
-  sstNo?: string;
-  msicCode?: string;
-  businessNature?: string;
-  picName?: string;
-  email?: string;
-  phoneNo?: string;
-  address1?: string;
-  address2?: string;
-  address3?: string;
-  address4?: string;
-  creditTerm?: string;
-  adminId?: number;
-  creditLimit?: number;
+  ID:  bigint;
+  CREATED_AT: Date;
+  CODE: string;
+  NAME: string;
+  SSM_REGISTRATION_NO?: string;
+  TAX_IDENTIFICATION_NO?: string;
+  SST_NO?: string;
+  MSIC_CODE?: string;
+  BUSINESS_NATURE?: string;
+  PIC_NAME?: string;
+  EMAIL?: string;
+  PHONE_NO?: string;
+  ADDRESS?: string;
+  CREDIT_TERM?: string;
+  ADMIN_ID?: number;
+  CREDIT_LIMIT?: number;
 };
 
 export type Product = {
-  id: number;
-  code: string;
-  name: string;
-  category: string;
-  baseUom: string;
-  stock: number;
-  unitPrice: number;
+  ID: number;
+  CODE: string;
+  NAME: string;
+  CATEGORY: string;
+  BASE_UOM: string;
+  STOCK: number;
+  UNIT_PRICE: number;
 };
 
 export type Transaction = {
-  id: number;
-  docNum: string;
-  transactionDate: Date;
-  customerId: number;
-  adminId: number;
-  totalPrice: number;
-  refDocNo?: string;
-  deliveryDate?: Date;
-  shippingMethod?: string;
-  commission?: number;
-  remark?: string;
-  status: string;
+  ID: number;
+  DOC_NUM: string;
+  TRANSACTION_DATE: Date;
+  CUSTOMER_ID: number;
+  ADMIN_ID: number;
+  TOTAL_PRICE: number;
+  REF_DOC_NO?: string;
+  DELIVERY_DATE?: Date;
+  SHIPPING_METHOD?: string;
+  COMISSION?: number;
+  REMARK?: string;
+  STATUS: string;
+};
+
+export type Transaction_Detail = {
+  ID: number;
+  TRANSACTION_ID: number;
+  PRODUCT_ID: number;
+  QTY: number;
+  UNIT_PRICE: number;
 };

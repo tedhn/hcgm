@@ -45,7 +45,7 @@ const UserPage = () => {
 
     deleteMutation.mutate({ id });
 
-    const newAdminData = adminData.filter((item) => item.id !== id);
+    const newAdminData = adminData.filter((item) => item.ID !== id);
 
     setAdminData(newAdminData);
   };
@@ -60,17 +60,31 @@ const UserPage = () => {
     {
       accessorKey: "name",
       header: "Name",
+      cell: ({ row }) => {
+        const name = row.original.NAME;
+
+        const outputText = name ?? "-";
+
+        return <div>{outputText}</div>;
+      },
     },
     {
       accessorKey: "email",
       header: "Email",
       size: 240,
+      cell: ({ row }) => {
+        const email = row.original.EMAIL;
+
+        const outputText = email ?? "-";
+
+        return <div>{outputText}</div>;
+      },
     },
     {
       accessorKey: "phone",
       header: "Phone",
       cell: ({ row }) => {
-        const phone = row.original.phone;
+        const phone = row.original.PHONE;
 
         const outputText = phone ?? "-";
 
@@ -88,7 +102,7 @@ const UserPage = () => {
       accessorKey: "role",
       header: "Role",
       cell: ({ row }) => {
-        const role = row.original.role;
+        const role = row.original.ROLE;
 
         const outputText = role
           ? role.charAt(0).toUpperCase() + role.slice(1)
@@ -101,7 +115,7 @@ const UserPage = () => {
       accessorKey: "created_at",
       header: "Created At",
       cell: ({ row }) => {
-        return new Date(row.original.created_at).toLocaleDateString();
+        return new Date(row.original.CREATED_AT).toLocaleDateString();
       },
     },
 
@@ -122,7 +136,7 @@ const UserPage = () => {
                 {/* <DropdownMenuLabel>Actions</DropdownMenuLabel> */}
                 <DropdownMenuItem
                   onClick={() =>
-                    router.push(current_path + `/edit/${row.original.id}`)
+                    router.push(current_path + `/edit/${row.original.ID}`)
                   }
                   className="focus:bg-gray-100"
                 >
@@ -131,7 +145,7 @@ const UserPage = () => {
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="text-red-500 focus:bg-red-500/10 focus:text-red-500"
-                  onClick={() => handleDelete(row.original.id)}
+                  onClick={() => handleDelete(row.original.ID)}
                 >
                   <Trash className="h-2 w-2" />
                   Delete
@@ -167,7 +181,7 @@ const UserPage = () => {
       accessorKey: "phoneNo",
       header: "Phone",
       cell: ({ row }) => {
-        const phone = row.original.phoneNo;
+        const phone = row.original.PHONE_NO;
         return <div>{phone ?? "-"}</div>;
       },
     },
@@ -175,7 +189,7 @@ const UserPage = () => {
       accessorKey: "address",
       header: "Address",
       cell: ({ row }) => {
-        const address = row.original.address1;
+        const address = row.original.ADDRESS;
         return <div>{address ?? "-"}</div>;
       },
     },
@@ -183,21 +197,21 @@ const UserPage = () => {
       accessorKey: "creditTerm",
       header: "Credit Term",
       cell: ({ row }) => {
-        return row.original.creditTerm ?? "-";
+        return row.original.CREDIT_TERM ?? "-";
       },
     },
     {
       accessorKey: "creditLimit",
       header: "Credit Limit",
       cell: ({ row }) => {
-        return row.original.creditLimit?.toFixed(2) ?? "0.00";
+        return row.original.CREDIT_LIMIT?.toFixed(2) ?? "0.00";
       },
     },
     {
       accessorKey: "created_at",
       header: "Created At",
       cell: ({ row }) => {
-        return new Date(row.original.created_at).toLocaleDateString();
+        return new Date(row.original.CREATED_AT).toLocaleDateString();
       },
     },
     {
@@ -216,7 +230,7 @@ const UserPage = () => {
               <DropdownMenuContent align="center">
                 <DropdownMenuItem
                   onClick={() =>
-                    router.push(`${current_path}/edit/${row.original.id}`)
+                    router.push(`${current_path}/edit/${row.original.ID}`)
                   }
                   className="focus:bg-gray-100"
                 >
