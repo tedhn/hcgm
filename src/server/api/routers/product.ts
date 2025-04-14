@@ -1,8 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
-import type { ProductType, UserType } from "~/lib/types";
-import { randomUUID } from "crypto";
+import type { ProductType } from "~/lib/types";
 
 export const productRouter = createTRPCRouter({
   getAll: publicProcedure.query(async ({ ctx }) => {

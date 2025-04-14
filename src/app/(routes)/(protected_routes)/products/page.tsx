@@ -16,7 +16,7 @@ import {
 import { Button } from "~/components/ui/button";
 import { MoreHorizontal, Pencil, Trash } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import type { ProductType, Customer } from "~/lib/types";
+import type { ProductType } from "~/lib/types";
 
 const ProductsPage = () => {
   const current_path = usePathname();
@@ -148,97 +148,6 @@ const ProductsPage = () => {
                   className="text-red-500 focus:bg-red-500/10 focus:text-red-500"
                   onClick={() => handleDelete(row.original.ID)}
                 >
-                  <Trash className="h-2 w-2" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        );
-      },
-    },
-  ];
-
-  const customerColumns: ColumnDef<Customer>[] = [
-    {
-      header: "#",
-      cell: ({ row }) => row.index + 1,
-      size: 50,
-    },
-    {
-      accessorKey: "code",
-      header: "Code",
-    },
-    {
-      accessorKey: "name",
-      header: "Name",
-    },
-    {
-      accessorKey: "email",
-      header: "Email",
-      size: 160,
-    },
-    {
-      accessorKey: "phoneNo",
-      header: "Phone",
-      cell: ({ row }) => {
-        const phone = row.original.PHONE_NO;
-        return <div>{phone ?? "-"}</div>;
-      },
-    },
-    {
-      accessorKey: "address",
-      header: "Address",
-      cell: ({ row }) => {
-        const address = row.original.ADDRESS;
-        return <div>{address ?? "-"}</div>;
-      },
-    },
-    {
-      accessorKey: "creditTerm",
-      header: "Credit Term",
-      cell: ({ row }) => {
-        return row.original.CREDIT_TERM ?? "-";
-      },
-    },
-    {
-      accessorKey: "creditLimit",
-      header: "Credit Limit",
-      cell: ({ row }) => {
-        return row.original.CREDIT_LIMIT?.toFixed(2) ?? "0.00";
-      },
-    },
-    {
-      accessorKey: "created_at",
-      header: "Created At",
-      cell: ({ row }) => {
-        return new Date(row.original.CREATED_AT).toLocaleDateString();
-      },
-    },
-    {
-      id: "actions",
-      size: 40,
-      cell: ({ row }) => {
-        return (
-          <div className="flex items-center justify-center">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                  <span className="sr-only">Open menu</span>
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="center">
-                <DropdownMenuItem
-                  onClick={() =>
-                    router.push(`${current_path}/edit/${row.original.ID}`)
-                  }
-                  className="focus:bg-gray-100"
-                >
-                  <Pencil className="h-2 w-2" />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem className="text-red-500 focus:bg-red-500/10 focus:text-red-500">
                   <Trash className="h-2 w-2" />
                   Delete
                 </DropdownMenuItem>
