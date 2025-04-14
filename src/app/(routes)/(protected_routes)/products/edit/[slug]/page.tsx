@@ -1,8 +1,8 @@
 "use client";
-import { useRouter, useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import React, { useEffect } from "react";
 import BackButton from "~/app/_components/back-button";
-import { Roles } from "~/app/const";
+import { Category } from "~/app/const";
 import { Button } from "~/components/ui/button";
 import InputWithLabel from "~/components/ui/input-with-label";
 import { Label } from "~/components/ui/label";
@@ -16,59 +16,59 @@ import {
 import { useIsMobile } from "~/hooks/useMobile";
 import { api } from "~/trpc/react";
 
-const EditUserPage = () => {
+const EditProductPage = () => {
   const router = useRouter();
   const params = useParams();
-  const isMobile = useIsMobile();
-
   const [code, setCode] = React.useState("");
   const [name, setName] = React.useState("");
-  const [phone, setPhone] = React.useState("");
-  const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [role, setRole] = React.useState<string>("");
+  const [category, setCategory] = React.useState("");
+  const [baseUom, setBaseUom] = React.useState("");
+  const [stock, setStock] = React.useState("");
+  const [unitPrice, setUnitPrice] = React.useState("");
 
-  const { data, isLoading } = api.user.getOne.useQuery({
+  const { mutate, data: editData, isPending } = api.product.edit.useMutation();
+
+  const { data, isLoading } = api.product.getOne.useQuery({
     id: params.slug ? +params.slug : -1,
   });
 
-  const { mutate, isPending, data: editData } = api.user.edit.useMutation();
-
-  useEffect(() => {
-    if (data && !isLoading) {
-      setCode(data.CODE!);
-      setName(data.NAME!);
-      setPhone(data.PHONE!);
-      setEmail(data.EMAIL!);
-      setPassword(data.PASSWORD!);
-      // setRole(data.ROLE!.replace("_", " ").);
-
-      const role = Roles.find(
-        (r) => r.name.toUpperCase() === data.ROLE!.replace("_", " "),
-      );
-
-      if (role) {
-        setRole(role.name);
-      }
-    }
-  }, [data, isLoading]);
-
-  useEffect(() => {
-    if (!isPending && editData) router.push(`/user`);
-  }, [isPending, router, editData]);
+  const isMobile = useIsMobile();
 
   const handleEdit = () => {
     console.log("edit", data?.ID);
     mutate({
       id: data!.ID,
       name,
-      email,
-      password,
-      phone: +phone,
-      role: role.toUpperCase().replaceAll(" ", "_"),
+      category,
+      base_uom: baseUom,
+      stock: +stock,
+      unit_price: +unitPrice,
       code,
     });
   };
+
+  useEffect(() => {
+    if (data && !isLoading) {
+      setCode(data.CODE);
+      setName(data.NAME);
+      setStock(data.STOCK + "");
+      setBaseUom(data.BASE_UOM + "");
+      setUnitPrice(data.UNIT_PRICE + "");
+      // setRole(data.ROLE!.replace("_", " ").);
+
+      const category = Category.find((r) => r.name === data.CATEGORY);
+
+      if (category) {
+        setCategory(category.name);
+      }
+    }
+  }, [data, isLoading]);
+
+  useEffect(() => {
+    if (!isPending && editData) {
+      router.push("/products");
+    }
+  }, [isPending, editData, router]);
 
   return (
     <div className="w-full px-0 pt-4 lg:px-14">
@@ -79,18 +79,16 @@ const EditUserPage = () => {
       <div className="flex w-full flex-col gap-6 lg:w-fit">
         <InputWithLabel label="Code" value={code} setValue={setCode} />
         <InputWithLabel label="Name" value={name} setValue={setName} />
-        <InputWithLabel label="Phone" value={phone} setValue={setPhone} />
-        <InputWithLabel label="Email" value={email} setValue={setEmail} />
 
         <div className="grid w-full max-w-sm items-center gap-1.5">
-          <Label>Role</Label>
+          <Label>Category</Label>
 
-          <Select value={role} onValueChange={setRole}>
+          <Select value={category} onValueChange={setCategory}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Role Type" />
+              <SelectValue placeholder="Category Type" />
             </SelectTrigger>
             <SelectContent>
-              {Roles.map((item) => (
+              {Category.map((item) => (
                 <SelectItem key={item.id} value={item.name}>
                   {item.name}
                 </SelectItem>
@@ -99,11 +97,18 @@ const EditUserPage = () => {
           </Select>
         </div>
 
-        {/* <InputWithLabel
-          label="Password"
-          value={password}
-          setValue={setPassword}
-        /> */}
+        <InputWithLabel
+          label="Base UOM"
+          value={baseUom}
+          setValue={setBaseUom}
+        />
+
+        <InputWithLabel
+          label="Unit Price"
+          value={unitPrice}
+          setValue={setUnitPrice}
+        />
+        <InputWithLabel label="Stocks" value={stock} setValue={setStock} />
 
         <Button className="w-fit" onClick={handleEdit}>
           Edit
@@ -112,4 +117,5 @@ const EditUserPage = () => {
     </div>
   );
 };
-export default EditUserPage;
+
+export default EditProductPage;

@@ -16,6 +16,7 @@ import { usePathname, useRouter } from "next/navigation";
 import Logo from "~/assets/icon.svg";
 import Image from "next/image";
 import clsx from "clsx";
+import Link from "next/link";
 
 // Menu items.
 const items = [
@@ -75,10 +76,10 @@ export function AppSidebar() {
                         "bg-white/30 hover:bg-white/30",
                     )}
                   >
-                    <a onClick={() => router.push("/" + item.url)}>
+                    <Link href={`/${item.url}`} prefetch={false} >
                       <item.icon size={64} />
                       <span>{item.title}</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

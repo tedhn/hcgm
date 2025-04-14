@@ -58,6 +58,10 @@ const UserPage = () => {
       size: 50,
     },
     {
+      accessorKey: "CODE",
+      header: "Code",
+    },
+    {
       accessorKey: "name",
       header: "Name",
       cell: ({ row }) => {

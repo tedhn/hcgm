@@ -28,7 +28,7 @@ export type Customer = {
   CREDIT_LIMIT?: number;
 };
 
-export type Product = {
+export type ProductType = {
   ID: number;
   CODE: string;
   NAME: string;
@@ -61,7 +61,7 @@ export type Transaction_Detail = {
   UNIT_PRICE: number;
 };
 
-export interface RoleType {
+export interface DropDownType {
   id: number;
   name: string;
 }

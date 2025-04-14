@@ -1,5 +1,5 @@
 "use client";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { AppSidebar } from "~/app/_components/sidebar";
 import { SidebarProvider, SidebarTrigger } from "~/components/ui/sidebar";
 import { useIsMobile } from "~/hooks/useMobile";
@@ -13,10 +13,10 @@ const Layout: React.FC<Readonly<{ children: ReactNode }>> = ({ children }) => {
     <SidebarProvider>
       <AppSidebar />
 
-      <div className="flex flex-col w-full">
+      <div className="flex w-full flex-col">
         {isMobile && <SidebarTrigger className="ml-4 mt-4" />}
         <div className="flex h-screen w-screen flex-col items-start p-4 lg:w-full">
-          {children}
+          <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
         </div>
       </div>
     </SidebarProvider>
