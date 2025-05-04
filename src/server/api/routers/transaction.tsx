@@ -45,47 +45,49 @@ export const transactionRouter = createTRPCRouter({
   create: publicProcedure
     .input(
       z.object({
-        code: z.string().min(1, "Code is required"),
-        name: z.string().min(1, "Name is required"),
-        category: z.string().min(1, "Category is required"),
-        base_uom: z.string().min(1, "Base UOM is required"),
-        stock: z.number().min(0, "Stock must be a non-negative number"),
-        unit_price: z
-          .number()
-          .min(0, "Unit Price must be a non-negative number"),
+        doc_num: z.string().min(1, "Document number is required"),
+        transaction_date: z.string().min(1, "Transaction date is required"), 
+        customer_id: z.string().min(1, "Customer ID is required"),
+        admin_id: z.string().min(1, "Admin ID is required"),
+        total_price: z.number().min(0, "Total price must be a non-negative number"),
+        ref_doc_no: z.string().min(1, "Reference document number is required"),
+        delivery_date: z.string().min(1, "Delivery date is required"), 
+        shipping_method: z.string().min(1, "Remark is required"),
+        comission: z.number().min(0, "Comision must be a non-negative number"),
+        remark: z.string().min(1, "Remark is required"),
+        status: z.string().min(1, "Status is required"),
+        products: z.array(z.object({id:z.number(),quantity:z.number(),price:z.number()}))
       }),
     )
 
     .mutation(async ({ input, ctx }) => {
       console.log(input);
-      const existingProduct = await ctx.db.product.findFirst({
-        where: { CODE: input.code },
+
+      const transactions = await ctx.db.transaction.create({
+        data: {
+          DOC_NUM: input.doc_num,
+          TRANSACTION_DATE: new Date(input.transaction_date),
+          CUSTOMER_ID: +input.customer_id,
+          ADMIN_ID: +input.admin_id,
+          TOTAL_PRICE: input.total_price,
+          REF_DOC_NO: input.ref_doc_no,
+          DELIVERY_DATE: input.delivery_date,
+          SHIPPING_METHOD: input.shipping_method,
+          COMISSION: input.comission,
+          REMARK: input.remark,
+          STATUS: input.status,
+        },
       });
 
-      console.log(existingProduct);
-
-      if (existingProduct) {
-        throw new TRPCError({
-          code: "CONFLICT",
-          message: "Product Code is already registered",
-        });
-      }
-
-      const newProduct = await ctx.db.product.create({
-        data: {
-          NAME: input.name,
-          CATEGORY: input.category,
-          STOCK: input.stock,
-          BASE_UOM: input.base_uom,
-          UNIT_PRICE: input.unit_price,
-          CODE: input.code,
-        },
+      const transactionDetail = await ctx.db.transactionDetail.createManyAndReturn({
+        data: input.products.map((product)=>({TRANSACTION_ID:transactions.ID,PRODUCT_ID:product.id,QTY:product.quantity,UNIT_PRICE:product.price}))
+          
+        
       });
 
       return {
         success: true,
-        message: "User created successfully",
-        product: newProduct,
+        message: "Sales Order created successfully",
       };
     }),
 
@@ -93,58 +95,60 @@ export const transactionRouter = createTRPCRouter({
     .input(
       z.object({
         id: z.number(),
-
-        // optional so that the admin can choose which data to change
-        code: z.string().min(1, "Code is required").optional(),
-        name: z.string().min(1, "Name is required").optional(),
-        category: z.string().min(1, "Category is required").optional(),
-        base_uom: z.string().min(1, "Base UOM is required").optional(),
-        stock: z
-          .number()
-          .min(0, "Stock must be a non-negative number")
-          .optional(),
-        unit_price: z
-          .number()
-          .min(0, "Unit Price must be a non-negative number")
-          .optional(),
+        doc_num: z.string().min(1, "Document number is required").optional(),
+        transaction_date: z.string().min(1, "Transaction date is required").optional(),
+        customer_id: z.string().min(1, "Customer ID is required").optional(),
+        admin_id: z.string().min(1, "Admin ID is required").optional(),
+        total_price: z.number().min(0, "Total price must be a non-negative number").optional(),
+        ref_doc_no: z.string().min(1, "Reference Document No is required").optional(),
+        delivery_date: z.string().min(1, "Delivery date is required").optional(),
+        shipping_method: z.string().min(1, "Shipping method is required").optional(),
+        comission: z.number().min(0, "Comission must be a non-negative number").optional(),
+        remark: z.string().min(1, "Remark is required").optional(),
+        status: z.string().min(1, "Status is required").optional(),
+        products: z.array(z.object({id: z.number(),quantity: z.number(),price: z.number(),})).optional(),
       }),
     )
+
     .mutation(async ({ input, ctx }) => {
-      // finding the user using ID
-      const product = await ctx.db.product.findUnique({
+      // Find the existing transaction
+      const transaction = await ctx.db.transaction.findUnique({
         where: { ID: input.id },
       });
 
-      // if product does not exist, return error message
-      if (!product) {
+      if (!transaction) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Product not found",
+          message: "Transaction not found",
         });
       }
 
-      // an empty object to fill the updated data
-      const updateData: ProductType = {} as ProductType;
+      const updateData: any = {};
+    if (input.doc_num) updateData.DOC_NUM = input.doc_num;
+    if (input.transaction_date) updateData.TRANSACTION_DATE = new Date(input.transaction_date);
+    if (input.customer_id) updateData.CUSTOMER_ID = +input.customer_id;
+    if (input.admin_id) updateData.ADMIN_ID = +input.admin_id;
+    if (input.total_price !== undefined) updateData.TOTAL_PRICE = input.total_price;
+    if (input.ref_doc_no) updateData.REF_DOC_NO = input.ref_doc_no;
+    if (input.delivery_date) updateData.DELIVERY_DATE = new Date(input.delivery_date);
+    if (input.shipping_method) updateData.SHIPPING_METHOD = input.shipping_method;
+    if (input.comission !== undefined) updateData.COMISSION = input.comission;
+    if (input.remark) updateData.REMARK = input.remark;
+    if (input.status) updateData.STATUS = input.status;
 
-      // checking each field to see if any of the data has been updated
-      if (input.name) updateData.NAME = input.name;
-      if (input.code) updateData.CODE = input.code;
-      if (input.category) updateData.CATEGORY = input.category;
-      if (input.base_uom) updateData.BASE_UOM = input.base_uom + "";
-      if (input.stock) updateData.STOCK = input.stock;
-      if (input.unit_price) updateData.UNIT_PRICE = input.unit_price;
+    // Perform the update
+    const updatedTransaction = await ctx.db.transaction.update({
+      where: { ID: input.id },
+      data: updateData,
+    });
 
-      // update the database using the user id
-      const updatedProduct = await ctx.db.product.update({
-        where: { ID: input.id },
-        data: updateData,
-      });
+
 
       // returns true if succesfully updated
       return {
         success: true,
-        message: `Product with ID ${input.id} updated successfully.`,
-        user: updatedProduct,
+        message: `Transaction with ID ${input.id} updated successfully.`,
+        updated: updatedTransaction,
       };
     }),
 

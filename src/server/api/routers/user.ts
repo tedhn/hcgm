@@ -89,10 +89,7 @@ export const userRouter = createTRPCRouter({
         // optional so that the admin can choose which data to change
         name: z.string().min(1, "Name is required").optional(),
         email: z.string().email("Invalid email").optional(),
-        password: z
-          .string()
-          .min(6, "Password must be at least 6 characters")
-          .optional(),
+        password: z.string().min(6, "Password must be at least 6 characters").optional(),
         phone: z.number().min(10, "Phone number is invalid").optional(),
         role: z.string().min(1, "Invalid role").optional(),
         code: z.string().min(1, "Invalid Code").optional(),
