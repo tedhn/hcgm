@@ -27,9 +27,7 @@ export const productRouter = createTRPCRouter({
         category: z.string().min(1, "Category is required"),
         base_uom: z.string().min(1, "Base UOM is required"),
         stock: z.number().min(0, "Stock must be a non-negative number"),
-        unit_price: z
-          .number()
-          .min(0, "Unit Price must be a non-negative number"),
+        unit_price: z.number().min(0, "Unit Price must be a non-negative number"),
       }),
     )
 
