@@ -74,7 +74,7 @@ const EditProductPage = () => {
     <div className="w-full px-0 pt-4 lg:px-14">
       {!isMobile && <BackButton />}
 
-      <h1 className="my-0 mb-10 text-3xl lg:my-10">Create User</h1>
+      <h1 className="my-0 mb-10 text-3xl lg:my-10">Edit Product</h1>
 
       <div className="flex w-full flex-col gap-6 lg:w-fit">
         <InputWithLabel label="Code" value={code} setValue={setCode} />

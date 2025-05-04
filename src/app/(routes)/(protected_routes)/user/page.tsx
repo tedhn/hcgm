@@ -17,6 +17,7 @@ import { Button } from "~/components/ui/button";
 import { MoreHorizontal, Pencil, Trash } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import type { UserType, CustomerType } from "~/lib/types";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "~/components/ui/tabs";
 
 const UserPage = () => {
   const current_path = usePathname();
@@ -270,23 +271,28 @@ const UserPage = () => {
           </Button>
         </div>
 
-        <section className="pb-8">
-          <h1>UserType</h1>
-          <DataTable
-            columns={adminColumns}
-            data={adminData}
-            isLoading={isLoading}
-          />
-        </section>
+        <Tabs defaultValue="admin" className="w-full">
+          <TabsList className="mb-4">
+            <TabsTrigger value="admin">Admins</TabsTrigger>
+            <TabsTrigger value="customer">Customers</TabsTrigger>
+          </TabsList>
 
-        <section>
-          <h1>CustomerTypes</h1>
-          <DataTable
-            columns={customerColumns}
-            data={customerData}
-            isLoading={isLoading}
-          />
-        </section>
+          <TabsContent value="admin">
+            <DataTable
+              columns={adminColumns}
+              data={adminData}
+              isLoading={isLoading}
+            />
+          </TabsContent>
+
+          <TabsContent value="customer">
+            <DataTable
+              columns={customerColumns}
+              data={customerData}
+              isLoading={isLoading}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
     </>
   );
