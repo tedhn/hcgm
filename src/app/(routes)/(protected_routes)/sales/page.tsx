@@ -3,7 +3,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { DataTable } from "~/app/_components/data-table";
 import { api } from "~/trpc/react";
 
@@ -18,6 +18,8 @@ import { MoreHorizontal, Pencil, Trash } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import type { SalesType } from "~/lib/types";
 import { Badge } from "~/components/ui/badge";
+import SalesDetailsDialog from "./viewModal";
+import toast from "react-hot-toast";
 
 const renderStatus = (status: string) => {
   switch (status.toLowerCase()) {
@@ -29,40 +31,28 @@ const renderStatus = (status: string) => {
       return <Badge variant={"success"}>Delivered</Badge>;
     case "cancelled":
       return <Badge variant={"destructive"}>Cancelled</Badge>;
-    case "rejected":
-      return <Badge variant={"destructive"}>Rejected</Badge>;
   }
 };
 
 const ProductsPage = () => {
   const current_path = usePathname();
   const router = useRouter();
-  const [data, setData] = useState<SalesType[]>([]);
-  // const [customerData, setCustomerData] = useState<Customer[]>([]);
+
+  const utils = api.useUtils();
+  const [selectedRow, setSelectedRow] = useState<SalesType | null>(null);
+  const [openViewModal, setOpenViewModal] = useState(false);
 
   const { data: apiData, isLoading } = api.transactions.getAll.useQuery();
 
-  const deleteMutation = api.transactions.delete.useMutation();
-
-  useEffect(() => {
-    try {
-      if (apiData?.sales) {
-        console.log(apiData);
-        setData(apiData.sales);
-      }
-    } catch (e) {
-      console.log(e);
-    }
-  }, [apiData]);
+  const { mutate: deleteTransaction } = api.transactions.delete.useMutation({
+    onSuccess: () => {
+      void utils.transactions.getAll.invalidate();
+      toast.success("Transaction deleted successfully");
+    },
+  });
 
   const handleDelete = (id: number) => {
-    console.log("delete", id);
-
-    deleteMutation.mutate({ id });
-
-    const newProductTypeData = data.filter((item) => item.ID !== id);
-
-    setData(newProductTypeData);
+    deleteTransaction({ transaction_id: id });
   };
 
   const transactionsColumns: ColumnDef<SalesType>[] = [
@@ -160,19 +150,23 @@ const ProductsPage = () => {
         <section className="pb-8">
           <DataTable
             columns={transactionsColumns}
-            data={data}
+            data={apiData ?? []}
             isLoading={isLoading}
+            onRowDoubleClick={(row) => {
+              console.log(row);
+              setOpenViewModal(true);
+              setSelectedRow(row);
+            }}
           />
         </section>
 
-        {/* <section>
-          <h1>Customers</h1>
-          <DataTable
-            columns={customerColumns}
-            data={customerData}
-            isLoading={isLoading}
+        {selectedRow && openViewModal && (
+          <SalesDetailsDialog
+            sales={selectedRow}
+            open={openViewModal}
+            onOpenChange={setOpenViewModal}
           />
-        </section> */}
+        )}
       </div>
     </>
   );

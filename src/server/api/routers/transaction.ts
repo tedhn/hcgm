@@ -1,7 +1,5 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
-import { TRPCError } from "@trpc/server";
-import type { ProductType } from "~/lib/types";
 
 export const transactionRouter = createTRPCRouter({
   getAll: publicProcedure.query(async ({ ctx }) => {
@@ -30,39 +28,73 @@ export const transactionRouter = createTRPCRouter({
     // const customers = await ctx.db.customer.findMany();
 
     //@ts-expeect-error any
-    return { sales  };
+    return sales;
   }),
 
   getOne: publicProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ input, ctx }) => {
-      const product = await ctx.db.product.findFirst({
+      const transaction = await ctx.db.transaction.findUnique({
         where: { ID: input.id },
       });
-      return product;
+
+      if (!transaction) {
+        throw new Error("Transaction not found");
+      }
+
+      const admin = await ctx.db.admin.findUnique({
+        where: { ID: transaction.ADMIN_ID },
+      });
+
+      const customer = await ctx.db.customer.findUnique({
+        where: { ID: transaction.CUSTOMER_ID },
+      });
+
+      const details = await ctx.db.transactionDetail.findMany({
+        where: { TRANSACTION_ID: transaction.ID },
+      });
+
+      const products = await Promise.all(
+        details.map(async (detail) => {
+          const product = await ctx.db.product.findUnique({
+            where: { ID: detail.PRODUCT_ID },
+          });
+
+          return { ...detail, NAME: product?.NAME };
+        }),
+      );
+
+      return {
+        ...transaction,
+        ADMIN: admin,
+        CUSTOMER: customer,
+        PRODUCTS: products,
+      };
     }),
 
   create: publicProcedure
     .input(
       z.object({
         doc_num: z.string().min(1, "Document number is required"),
-        transaction_date: z.string().min(1, "Transaction date is required"), 
+        transaction_date: z.string().min(1, "Transaction date is required"),
         customer_id: z.string().min(1, "Customer ID is required"),
         admin_id: z.string().min(1, "Admin ID is required"),
-        total_price: z.number().min(0, "Total price must be a non-negative number"),
+        total_price: z
+          .number()
+          .min(0, "Total price must be a non-negative number"),
         ref_doc_no: z.string().min(1, "Reference document number is required"),
-        delivery_date: z.string().min(1, "Delivery date is required"), 
+        delivery_date: z.string().min(1, "Delivery date is required"),
         shipping_method: z.string().min(1, "Remark is required"),
         comission: z.number().min(0, "Comision must be a non-negative number"),
         remark: z.string().min(1, "Remark is required"),
-        status: z.string().min(1, "Status is required"),
-        products: z.array(z.object({id:z.number(),quantity:z.number(),price:z.number()}))
+        products: z.array(
+          z.object({ id: z.number(), quantity: z.number(), price: z.number() }),
+        ),
       }),
     )
 
     .mutation(async ({ input, ctx }) => {
       console.log(input);
-
       const transactions = await ctx.db.transaction.create({
         data: {
           DOC_NUM: input.doc_num,
@@ -75,107 +107,124 @@ export const transactionRouter = createTRPCRouter({
           SHIPPING_METHOD: input.shipping_method,
           COMISSION: input.comission,
           REMARK: input.remark,
-          STATUS: input.status,
+          STATUS: "PENDING",
         },
       });
 
-      const transactionDetail = await ctx.db.transactionDetail.createManyAndReturn({
-        data: input.products.map((product)=>({TRANSACTION_ID:transactions.ID,PRODUCT_ID:product.id,QTY:product.quantity,UNIT_PRICE:product.price}))
-          
-        
+      const transactionDetail =
+        await ctx.db.transactionDetail.createManyAndReturn({
+          data: input.products.map((product) => ({
+            TRANSACTION_ID: transactions.ID,
+            PRODUCT_ID: product.id,
+            QTY: product.quantity,
+            UNIT_PRICE: product.price,
+          })),
+        });
+
+      return new Promise((resolve) => {
+        resolve({
+          success: true,
+          message: `Transaction with ID ${transactions.ID} created successfully.`,
+          transaction: transactions,
+          transactionDetail: transactionDetail,
+        });
       });
-
-      return {
-        success: true,
-        message: "Sales Order created successfully",
-      };
     }),
-
   edit: publicProcedure
     .input(
       z.object({
-        id: z.number(),
-        doc_num: z.string().min(1, "Document number is required").optional(),
-        transaction_date: z.string().min(1, "Transaction date is required").optional(),
-        customer_id: z.string().min(1, "Customer ID is required").optional(),
-        admin_id: z.string().min(1, "Admin ID is required").optional(),
-        total_price: z.number().min(0, "Total price must be a non-negative number").optional(),
-        ref_doc_no: z.string().min(1, "Reference Document No is required").optional(),
-        delivery_date: z.string().min(1, "Delivery date is required").optional(),
-        shipping_method: z.string().min(1, "Shipping method is required").optional(),
-        comission: z.number().min(0, "Comission must be a non-negative number").optional(),
-        remark: z.string().min(1, "Remark is required").optional(),
-        status: z.string().min(1, "Status is required").optional(),
-        products: z.array(z.object({id: z.number(),quantity: z.number(),price: z.number(),})).optional(),
+        transaction_id: z.number().min(1, "Transaction ID is required"),
+        doc_num: z.string().min(1, "Document number is required"),
+        transaction_date: z.string().min(1, "Transaction date is required"),
+        customer_id: z.string().min(1, "Customer ID is required"),
+        admin_id: z.string().min(1, "Admin ID is required"),
+        total_price: z
+          .number()
+          .min(0, "Total price must be a non-negative number"),
+        ref_doc_no: z.string().min(1, "Reference document number is required"),
+        delivery_date: z.string().min(1, "Delivery date is required"),
+        shipping_method: z.string().min(1, "Shipping method is required"),
+        comission: z
+          .number()
+          .min(0, "Commission must be a non-negative number"),
+        remark: z.string().min(1, "Remark is required"),
+        products: z.array(
+          z.object({ id: z.number(), quantity: z.number(), price: z.number() }),
+        ),
+        status: z.string().min(1, "Status is required"),
       }),
     )
 
     .mutation(async ({ input, ctx }) => {
-      // Find the existing transaction
-      const transaction = await ctx.db.transaction.findUnique({
-        where: { ID: input.id },
+      console.log(input);
+
+      // Update the transaction in the database
+      const updatedTransaction = await ctx.db.transaction.update({
+        where: { ID: input.transaction_id }, // Ensure the ID matches
+        data: {
+          DOC_NUM: input.doc_num,
+          TRANSACTION_DATE: new Date(input.transaction_date),
+          CUSTOMER_ID: +input.customer_id,
+          ADMIN_ID: +input.admin_id,
+          TOTAL_PRICE: input.total_price,
+          REF_DOC_NO: input.ref_doc_no,
+          DELIVERY_DATE: input.delivery_date,
+          SHIPPING_METHOD: input.shipping_method,
+          COMISSION: input.comission,
+          REMARK: input.remark,
+          STATUS: input.status, // You can modify this status if needed
+        },
       });
 
-      if (!transaction) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Transaction not found",
+      // First, delete existing transaction details before adding the new ones
+      await ctx.db.transactionDetail.deleteMany({
+        where: { TRANSACTION_ID: input.transaction_id },
+      });
+
+      // Add the new products to the transaction
+      const updatedTransactionDetails =
+        await ctx.db.transactionDetail.createMany({
+          data: input.products.map((product) => ({
+            TRANSACTION_ID: updatedTransaction.ID,
+            PRODUCT_ID: product.id,
+            QTY: product.quantity,
+            UNIT_PRICE: product.price,
+          })),
         });
-      }
 
-      const updateData: any = {};
-    if (input.doc_num) updateData.DOC_NUM = input.doc_num;
-    if (input.transaction_date) updateData.TRANSACTION_DATE = new Date(input.transaction_date);
-    if (input.customer_id) updateData.CUSTOMER_ID = +input.customer_id;
-    if (input.admin_id) updateData.ADMIN_ID = +input.admin_id;
-    if (input.total_price !== undefined) updateData.TOTAL_PRICE = input.total_price;
-    if (input.ref_doc_no) updateData.REF_DOC_NO = input.ref_doc_no;
-    if (input.delivery_date) updateData.DELIVERY_DATE = new Date(input.delivery_date);
-    if (input.shipping_method) updateData.SHIPPING_METHOD = input.shipping_method;
-    if (input.comission !== undefined) updateData.COMISSION = input.comission;
-    if (input.remark) updateData.REMARK = input.remark;
-    if (input.status) updateData.STATUS = input.status;
-
-    // Perform the update
-    const updatedTransaction = await ctx.db.transaction.update({
-      where: { ID: input.id },
-      data: updateData,
-    });
-
-
-
-      // returns true if succesfully updated
-      return {
-        success: true,
-        message: `Transaction with ID ${input.id} updated successfully.`,
-        updated: updatedTransaction,
-      };
+      return new Promise((resolve) => {
+        resolve({
+          success: true,
+          message: `Transaction with ID ${updatedTransaction.ID} updated successfully.`,
+          transaction: updatedTransaction,
+          transactionDetail: updatedTransactionDetails,
+        });
+      });
     }),
 
   delete: publicProcedure
-    .input(z.object({ id: z.number() })) // validate email format
+    .input(
+      z.object({
+        transaction_id: z.number().min(1, "Transaction ID is required"),
+      }),
+    )
     .mutation(async ({ input, ctx }) => {
-      // Check if the product exists
-      const product = await ctx.db.product.findFirst({
-        where: { ID: +input.id },
+      const transactionId = input.transaction_id;
+
+      // First, delete the related transaction details
+      await ctx.db.transactionDetail.deleteMany({
+        where: { TRANSACTION_ID: transactionId },
       });
 
-      // check if the product is found
-      if (!product) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "User not found",
-        });
-      }
-
-      // Delete the product
-      await ctx.db.product.delete({
-        where: { ID: input.id },
+      // Then, delete the main transaction
+      const deletedTransaction = await ctx.db.transaction.delete({
+        where: { ID: transactionId },
       });
 
       return {
         success: true,
-        message: `Product ${input.id} deleted successfully.`,
+        message: `Transaction with ID ${transactionId} deleted successfully.`,
+        deletedTransaction,
       };
     }),
 });

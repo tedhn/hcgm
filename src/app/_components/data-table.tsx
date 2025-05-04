@@ -27,11 +27,13 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   isLoading: boolean;
+  onRowDoubleClick: (row: TData) => void;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  onRowDoubleClick,
   isLoading,
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
@@ -86,6 +88,7 @@ export function DataTable<TData, TValue>({
                     <TableRow
                       key={row.id}
                       data-state={row.getIsSelected() && "selected"}
+                      onDoubleClick={() => onRowDoubleClick(row.original)}
                     >
                       {row.getVisibleCells().map((cell) => (
                         <TableCell key={cell.id}>

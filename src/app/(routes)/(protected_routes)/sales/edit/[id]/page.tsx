@@ -1,18 +1,19 @@
 "use client";
+import React, { useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "~/components/ui/popover";
-import { CalendarIcon, Check, ChevronsUpDown, Trash2 } from "lucide-react";
-import React from "react";
-import BackButton from "~/app/_components/back-button";
-import { Button } from "~/components/ui/button";
-import { Calendar } from "~/components/ui/calendar";
-import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
-import { useIsMobile } from "~/hooks/useMobile";
-import { cn } from "~/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 import { api } from "~/trpc/react";
 import {
   Command,
@@ -24,20 +25,28 @@ import {
 } from "~/components/ui/command";
 import type { Product } from "@prisma/client";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
-import ConfirmSalesModal from "./confirmationModal";
 import { format } from "date-fns";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
+import { Label } from "~/components/ui/label";
+import { Input } from "~/components/ui/input";
+import { CalendarIcon, Check, ChevronsUpDown, Trash2 } from "lucide-react";
+import { Button } from "~/components/ui/button";
+import { cn } from "~/lib/utils";
+import { Calendar } from "~/components/ui/calendar";
+import { useIsMobile } from "~/hooks/useMobile";
+import BackButton from "~/app/_components/back-button";
+import toast from "react-hot-toast";
 
-const CreateSalesPage = () => {
+const EditSalesPage = () => {
+  const { id } = useParams<{ id: string }>();
+
+  const utils = api.useUtils();
+  const router = useRouter();
   const isMobile = useIsMobile();
 
-  const [openConfirmModal, setOpenConfirmModal] = React.useState(false);
+  const { data: salesData, isLoading } = api.transactions.getOne.useQuery({
+    id: +id,
+  });
+
   const [customerId, setCustomerId] = React.useState<string>("");
   const [openCustomerComboBox, setOpenCustomerComboBox] = React.useState(false);
 
@@ -51,18 +60,84 @@ const CreateSalesPage = () => {
 
   const [documentNo, setDocumentNo] = React.useState("");
   const [referenceDocNo, setReferenceDocNo] = React.useState("");
-  const [shippingMethod, setShippingMethod] = React.useState("");
-  const [commission, setCommission] = React.useState("");
-  const [remarks, setRemarks] = React.useState("");
   const [deliveryDate, setDeliveryDate] = React.useState<Date | undefined>(
     undefined,
   );
+  const [shippingMethod, setShippingMethod] = React.useState("");
+  const [commission, setCommission] = React.useState("");
+  const [remarks, setRemarks] = React.useState("");
+  const [status, setStatus] = React.useState("");
 
   const { data: customerData } = api.user.getAllCustomers.useQuery();
   const { data: productData } = api.product.getAll.useQuery<Product[]>();
 
-  const handleCreate = async () => {
-    setOpenConfirmModal(true);
+  const { mutate: editSales, isPending } = api.transactions.edit.useMutation({
+    onSuccess: () => {
+      void utils.transactions.getAll.invalidate();
+      toast.success("Sales updated successfully");
+      router.push("/sales");
+    },
+  });
+
+  // Prefill data when salesData arrives
+  useEffect(() => {
+    if (salesData && productData) {
+      console.log(salesData.DELIVERY_DATE);
+      setDocumentNo(salesData.DOC_NUM);
+      setReferenceDocNo(salesData.REF_DOC_NO ?? "");
+      setCustomerId(salesData.CUSTOMER_ID.toString());
+      setDeliveryDate(new Date(salesData.DELIVERY_DATE!));
+      setShippingMethod(salesData.SHIPPING_METHOD ?? "");
+      setCommission(salesData.COMISSION ? salesData.COMISSION.toString() : "");
+      setRemarks(salesData.REMARK ?? "");
+      setStatus(salesData.STATUS);
+      setProductDetails(
+        salesData.PRODUCTS.map((product) => ({
+          quantity: product.QTY.toString(),
+          price: product.UNIT_PRICE.toString(),
+          name:
+            productData.find((p) => p.ID === product.PRODUCT_ID)?.NAME ?? "",
+          id: product.PRODUCT_ID.toString(),
+        })),
+      );
+      setProductArr(
+        salesData.PRODUCTS.map(
+          (product) => productData.find((p) => p.ID === product.PRODUCT_ID)!,
+        ),
+      );
+    }
+  }, [salesData, productData]);
+
+  const handleUpdate = () => {
+    const salesData = {
+      transaction_id: +id,
+      doc_num: documentNo,
+      transaction_date: new Date().toISOString(),
+      customer_id: customerId,
+      admin_id: "3",
+      total_price: productDetails.reduce(
+        (total, product) => total + +product.price * +product.quantity,
+        0,
+      ),
+      ref_doc_no: referenceDocNo,
+      delivery_date: deliveryDate
+        ? deliveryDate.toISOString()
+        : new Date().toISOString(),
+      shipping_method: shippingMethod,
+      comission: +commission,
+      remark: remarks,
+
+      products: productDetails.map((p) => ({
+        id: Number(p.id),
+        quantity: Number(p.quantity),
+        price: Number(p.price),
+      })),
+      status: status,
+    };
+
+    console.log(salesData);
+
+    editSales(salesData);
   };
 
   const removeProduct = (id: number) => {
@@ -70,10 +145,12 @@ const CreateSalesPage = () => {
     setProductDetails((prev) => prev.filter((p) => +p.id !== id));
   };
 
+  if (isLoading) return <div>Loading...</div>;
+
   return (
     <div className="w-full px-0 pt-4 lg:px-14">
       {!isMobile && <BackButton />}
-      <h1 className="my-0 mb-10 text-3xl lg:my-4">Create Sales</h1>
+      <h1 className="my-0 mb-10 text-3xl lg:my-4">Edit Sales</h1>
 
       <div className="flex w-full flex-col gap-6 pb-8 pt-2 lg:w-2/3">
         <div className="grid w-full items-center gap-1.5">
@@ -336,6 +413,21 @@ const CreateSalesPage = () => {
           </div>
 
           <div>
+            <Label>Status</Label>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="PENDING">Pending</SelectItem>
+                <SelectItem value="APPROVED">Approved</SelectItem>
+                <SelectItem value="DELIVERED">Delivered</SelectItem>
+                <SelectItem value="CANCELLED">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
             <Label>Commission</Label>
             <Input
               placeholder="Enter commission %"
@@ -354,33 +446,12 @@ const CreateSalesPage = () => {
           </div>
         </div>
 
-        <Button className="w-fit" onClick={handleCreate}>
-          Create
+        <Button className="w-fit" onClick={handleUpdate} disabled={isPending}>
+          {isPending ? "Updating..." : "Update"}
         </Button>
       </div>
-
-      {openConfirmModal && (
-        <ConfirmSalesModal
-          open={openConfirmModal}
-          onOpenChange={setOpenConfirmModal}
-          customer={customerData!.find((c) => c.ID === +customerId)!}
-          productDetails={productDetails}
-          docNumber={documentNo}
-          totalPrice={
-            "RM" +
-            productDetails.reduce((acc, curr) => {
-              return acc + +curr.price * +curr.quantity;
-            }, 0)
-          }
-          referenceDoc={referenceDocNo}
-          deliveryDate={deliveryDate}
-          shippingMethod={shippingMethod}
-          commission={commission}
-          remarks={remarks}
-        />
-      )}
     </div>
   );
 };
 
-export default CreateSalesPage;
+export default EditSalesPage;

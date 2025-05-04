@@ -11,15 +11,16 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { format } from "date-fns";
-import { type Product } from "@prisma/client";
+import type { Customer } from "@prisma/client";
 import { api } from "~/trpc/react";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 interface ConfirmSalesModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  customerName: string | undefined;
+  customer: Customer;
   productDetails: {
-    uom: string;
     quantity: string;
     price: string;
     name: string;
@@ -37,7 +38,7 @@ interface ConfirmSalesModalProps {
 const ConfirmSalesModal: React.FC<ConfirmSalesModalProps> = ({
   open,
   onOpenChange,
-  customerName,
+  customer,
   productDetails,
   totalPrice,
   docNumber,
@@ -47,30 +48,44 @@ const ConfirmSalesModal: React.FC<ConfirmSalesModalProps> = ({
   commission,
   remarks,
 }) => {
-  const {
-    mutate: createSales,
-    data,
-    isPending,
-    error,
-    isError,
-  } = api.transactions.create.useMutation({
-    onSuccess: () => {
-      onOpenChange(false);
-    },
-  });
+  const router = useRouter();
+
+  const { mutate: createSales, isPending } =
+    api.transactions.create.useMutation({
+      onSuccess: () => {
+        toast.success("Sales created successfully");
+        onOpenChange(false);
+        router.push("/sales");
+      },
+      onError: (error) => {
+        console.log(error);
+        toast.error("Failed to create sales.");
+      },
+    });
 
   const handleCreate = () => {
-    createSales({
-      customerName,
-      productDetails,
-      totalPrice,
-      docNumber,
-      referenceDoc,
-      deliveryDate,
-      shippingMethod,
-      commission,
-      remarks,
-    });
+    const salesData = {
+      doc_num: docNumber,
+      transaction_date: new Date().toISOString(),
+      customer_id: customer.ID + "",
+      admin_id: "3",
+      total_price: parseInt(totalPrice.replace("RM", "")),
+      ref_doc_no: referenceDoc,
+      delivery_date: deliveryDate
+        ? deliveryDate.toISOString()
+        : new Date().toISOString(),
+      shipping_method: shippingMethod,
+      comission: +commission,
+      remark: remarks,
+
+      products: productDetails.map((p) => ({
+        id: Number(p.id),
+        quantity: Number(p.quantity),
+        price: Number(p.price),
+      })),
+    };
+
+    createSales(salesData);
   };
 
   return (
@@ -92,7 +107,7 @@ const ConfirmSalesModal: React.FC<ConfirmSalesModalProps> = ({
           </div>
 
           <div>
-            <strong>Customer:</strong> {customerName ?? "-"}
+            <strong>Customer:</strong> {customer.NAME ?? "-"}
           </div>
 
           <Card className="mx-auto my-6 w-full max-w-5xl">
@@ -109,7 +124,6 @@ const ConfirmSalesModal: React.FC<ConfirmSalesModalProps> = ({
                           Product Name
                         </th>
                         <th className="p-3 text-left font-medium">Quantity</th>
-                        <th className="p-3 text-left font-medium">UOM</th>
                         <th className="p-3 text-left font-medium">Price</th>
                       </tr>
                     </thead>
@@ -121,7 +135,6 @@ const ConfirmSalesModal: React.FC<ConfirmSalesModalProps> = ({
                         >
                           <td className="p-3">{product.name}</td>
                           <td className="p-3">{product.quantity || "-"}</td>
-                          <td className="p-3">{product.uom || "-"}</td>
                           <td className="p-3">{product.price || "-"}</td>
                         </tr>
                       ))}
@@ -154,13 +167,18 @@ const ConfirmSalesModal: React.FC<ConfirmSalesModalProps> = ({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isPending}
+          >
             Cancel
           </Button>
           <Button
             onClick={() => {
               handleCreate();
             }}
+            disabled={isPending}
           >
             Confirm
           </Button>
