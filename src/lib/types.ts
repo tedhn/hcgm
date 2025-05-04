@@ -1,31 +1,31 @@
 export type UserType = {
   ID: number;
   CREATED_AT: Date;
-  NAME?: string;
-  PASSWORD?: string;
-  EMAIL?: string;
-  PHONE?: string;
-  ROLE?: string;
-  CODE?: string;
+  NAME?: string | null;
+  PASSWORD?: string | null;
+  EMAIL?: string | null;
+  PHONE?: string | null;
+  ROLE?: string | null;
+  CODE?: string | null;
 };
 
-export type Customer = {
-  ID: bigint;
+export type CustomerType = {
+  ID: number;
   CREATED_AT: Date;
   CODE: string;
   NAME: string;
-  SSM_REGISTRATION_NO?: string;
-  TAX_IDENTIFICATION_NO?: string;
-  SST_NO?: string;
-  MSIC_CODE?: string;
-  BUSINESS_NATURE?: string;
-  PIC_NAME?: string;
-  EMAIL?: string;
-  PHONE_NO?: string;
-  ADDRESS?: string;
-  CREDIT_TERM?: string;
-  ADMIN_ID?: number;
-  CREDIT_LIMIT?: number;
+  SSM_REGISTRATION_NO?: string | null;
+  TAX_IDENTIFICATION_NO?: string | null;
+  SST_NO?: string | null;
+  MSIC_CODE?: string | null;
+  BUSINESS_NATURE?: string | null;
+  PIC_NAME?: string | null;
+  EMAIL?: string | null;
+  PHONE_NO?: string | null;
+  ADDRESS?: string | null;
+  CREDIT_TERM?: string | null;
+  ADMIN_ID?: number | null;
+  CREDIT_LIMIT?: number | null;
 };
 
 export type ProductType = {
@@ -38,22 +38,28 @@ export type ProductType = {
   UNIT_PRICE: number;
 };
 
-export type Transaction = {
+export type TransactionType = {
   ID: number;
   DOC_NUM: string;
   TRANSACTION_DATE: Date;
   CUSTOMER_ID: number;
   ADMIN_ID: number;
   TOTAL_PRICE: number;
-  REF_DOC_NO?: string;
-  DELIVERY_DATE?: Date;
-  SHIPPING_METHOD?: string;
-  COMISSION?: number;
-  REMARK?: string;
+  REF_DOC_NO?: string | null;
+  DELIVERY_DATE?: Date | null;
+  SHIPPING_METHOD?: string | null;
+  COMISSION?: number | null;
+  REMARK?: string | null;
   STATUS: string;
 };
 
-export type Transaction_Detail = {
+export interface SalesType extends TransactionType {
+  CUSTOMER: CustomerType | undefined;
+  ADMIN: UserType | undefined;
+  DETAILS: TransactionDetailType | undefined;
+}
+
+export type TransactionDetailType = {
   ID: number;
   TRANSACTION_ID: number;
   PRODUCT_ID: number;

@@ -16,13 +16,13 @@ import {
 import { Button } from "~/components/ui/button";
 import { MoreHorizontal, Pencil, Trash } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import type { UserType, Customer } from "~/lib/types";
+import type { UserType, CustomerType } from "~/lib/types";
 
 const UserPage = () => {
   const current_path = usePathname();
   const router = useRouter();
   const [adminData, setUserData] = useState<UserType[]>([]);
-  // const [customerData, setCustomerData] = useState<Customer[]>([]);
+  const [customerData, setCustomerData] = useState<CustomerType[]>([]);
 
   const { data: userData, isLoading } = api.user.getAll.useQuery();
 
@@ -31,9 +31,9 @@ const UserPage = () => {
   useEffect(() => {
     console.log(typeof api.user.getAll);
     try {
-      if (userData?.admin) {
+      if (userData?.admin && userData.customers) {
         setUserData(userData.admin);
-        // setCustomerData(userData.customers);
+        setCustomerData(userData.customers);
       }
     } catch (e) {
       console.log(e);
@@ -162,27 +162,30 @@ const UserPage = () => {
     },
   ];
 
-  const customerColumns: ColumnDef<Customer>[] = [
+  const customerColumns: ColumnDef<CustomerType>[] = [
     {
       header: "#",
       cell: ({ row }) => row.index + 1,
       size: 50,
     },
     {
-      accessorKey: "code",
+      accessorKey: "CODE",
       header: "Code",
     },
     {
-      accessorKey: "name",
+      accessorKey: "NAME",
       header: "Name",
     },
     {
-      accessorKey: "email",
+      accessorKey: "EMAIL",
       header: "Email",
-      size: 160,
+      cell: ({ row }) => {
+        const email = row.original.EMAIL;
+        return <div>{email ?? "-"}</div>;
+      },
     },
     {
-      accessorKey: "phoneNo",
+      accessorKey: "PHONE_NO",
       header: "Phone",
       cell: ({ row }) => {
         const phone = row.original.PHONE_NO;
@@ -276,14 +279,14 @@ const UserPage = () => {
           />
         </section>
 
-        {/* <section>
-          <h1>Customers</h1>
+        <section>
+          <h1>CustomerTypes</h1>
           <DataTable
             columns={customerColumns}
             data={customerData}
             isLoading={isLoading}
           />
-        </section> */}
+        </section>
       </div>
     </>
   );

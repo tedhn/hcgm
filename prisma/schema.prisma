@@ -50,7 +50,7 @@ model Product {
   STOCK       Float  @default(0)
   UNIT_PRICE  Float  @default(0)
 
-  Transaction_Detail Transaction_Detail[]
+  TransactionDetail TransactionDetail[]
 }
 
 model Transaction {
@@ -69,10 +69,10 @@ model Transaction {
   REMARK            String?   @default("")
   STATUS            String    @default("")
 
-  Transaction_Detail Transaction_Detail[]
+  TransactionDetail TransactionDetail[]
 }
 
-model Transaction_Detail {
+model TransactionDetail {
   ID              Int         @id @default(autoincrement())
   TRANSACTION     Transaction @relation(fields: [TRANSACTION_ID], references: [ID])
   TRANSACTION_ID  Int

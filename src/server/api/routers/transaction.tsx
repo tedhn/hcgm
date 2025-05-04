@@ -3,11 +3,34 @@ import { createTRPCRouter, publicProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
 import type { ProductType } from "~/lib/types";
 
-export const productRouter = createTRPCRouter({
+export const transactionRouter = createTRPCRouter({
   getAll: publicProcedure.query(async ({ ctx }) => {
-    const products = await ctx.db.product.findMany();
+    const transactions = await ctx.db.transaction.findMany();
+    const admins = await ctx.db.admin.findMany();
+    const customers = await ctx.db.customer.findMany();
+    const transactionDetails = await ctx.db.transactionDetail.findMany();
 
-    return products;
+    const sales = transactions.map((transaction) => {
+      const admin = admins.find((admin) => admin.ID === transaction.ADMIN_ID);
+      const customer = customers.find(
+        (customer) => customer.ID === transaction.CUSTOMER_ID,
+      );
+      const details = transactionDetails.find(
+        (detail) => detail.TRANSACTION_ID === transaction.ID,
+      );
+
+      return {
+        ...transaction,
+        ADMIN: admin,
+        CUSTOMER: customer,
+        DETAILS: details,
+      };
+    });
+
+    // const customers = await ctx.db.customer.findMany();
+
+    //@ts-expeect-error any
+    return { sales  };
   }),
 
   getOne: publicProcedure

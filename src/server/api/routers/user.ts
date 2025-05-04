@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
-import type { UserType } from "~/lib/types";
+import type { CustomerType, UserType } from "~/lib/types";
 
 const LoginSchema = z.object({
   email: z.string().email(),
@@ -11,10 +11,18 @@ const LoginSchema = z.object({
 export const userRouter = createTRPCRouter({
   getAll: publicProcedure.query(async ({ ctx }) => {
     const admin = await ctx.db.admin.findMany();
-    // const customers = await ctx.db.customer.findMany();
+    const customers = await ctx.db.customer.findMany();
 
     //@ts-expeect-error any
-    return { admin } as { admin: UserType[] };
+    return { admin, customers } as {
+      admin: UserType[];
+      customers: CustomerType[];
+    };
+  }),
+
+  getAllCustomers: publicProcedure.query(async ({ ctx }) => {
+    const customers = await ctx.db.customer.findMany();
+    return customers;
   }),
 
   getOne: publicProcedure
