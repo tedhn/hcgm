@@ -16,7 +16,23 @@ import {
 import { Button } from "~/components/ui/button";
 import { MoreHorizontal, Pencil, Trash } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import type { SalesType, TransactionType } from "~/lib/types";
+import type { SalesType } from "~/lib/types";
+import { Badge } from "~/components/ui/badge";
+
+const renderStatus = (status: string) => {
+  switch (status.toLowerCase()) {
+    case "pending":
+      return <Badge variant={"pending"}>Pending</Badge>;
+    case "approved":
+      return <Badge variant={"done"}>Approved</Badge>;
+    case "delivered":
+      return <Badge variant={"success"}>Delivered</Badge>;
+    case "cancelled":
+      return <Badge variant={"destructive"}>Cancelled</Badge>;
+    case "rejected":
+      return <Badge variant={"destructive"}>Rejected</Badge>;
+  }
+};
 
 const ProductsPage = () => {
   const current_path = usePathname();
@@ -78,6 +94,16 @@ const ProductsPage = () => {
       },
     },
 
+    {
+      accessorKey: "TOTAL_PRICE",
+      header: "Total Price",
+      cell: ({ row }) => <div>RM {row.original.TOTAL_PRICE}</div>,
+    },
+    {
+      accessorKey: "STATUS",
+      header: "Status",
+      cell: ({ row }) => renderStatus(row.original.STATUS),
+    },
     {
       id: "actions",
       size: 40,

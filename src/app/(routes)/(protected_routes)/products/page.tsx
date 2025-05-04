@@ -24,19 +24,19 @@ const ProductsPage = () => {
   const [data, setData] = useState<ProductType[]>([]);
   // const [customerData, setCustomerData] = useState<Customer[]>([]);
 
-  const { data: apiData, isLoading } = api.product.getAll.useQuery();
+  const { data: productData, isLoading } = api.product.getAll.useQuery();
 
   const deleteMutation = api.product.delete.useMutation();
 
   useEffect(() => {
     try {
-      if (apiData?.products) {
-        setData(apiData.products);
+      if (productData) {
+        setData(productData);
       }
     } catch (e) {
       console.log(e);
     }
-  }, [apiData]);
+  }, [productData]);
 
   const handleDelete = (id: number) => {
     console.log("delete", id);
