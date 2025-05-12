@@ -2,13 +2,38 @@ import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
 import type { CustomerType, UserType } from "~/lib/types";
+import { Resend } from "resend";
+import { EmailTemplate } from "~/app/_components/email-template";
 
 const LoginSchema = z.object({
   email: z.string().email(),
   password: z.string(),
 });
 
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 export const userRouter = createTRPCRouter({
+  sendEmail: publicProcedure
+    .input(z.object({ email: z.string().email() }))
+    .mutation(async ({ input, ctx }) => {
+
+
+      console.log(input.email)
+      const { data, error } = await resend.emails.send({
+        from: "Acme <onboarding@resend.dev>",
+        to: [input.email],
+        subject: "Hello world",
+        react: EmailTemplate({ firstName: "TED TESTING" }),
+      });
+
+      console.log(data);
+
+      console.log("FINDME");
+      console.log(error);
+
+      // return { };
+    }),
+
   getAll: publicProcedure.query(async ({ ctx }) => {
     const admin = await ctx.db.admin.findMany();
     const customers = await ctx.db.customer.findMany();
@@ -89,7 +114,10 @@ export const userRouter = createTRPCRouter({
         // optional so that the admin can choose which data to change
         name: z.string().min(1, "Name is required").optional(),
         email: z.string().email("Invalid email").optional(),
-        password: z.string().min(6, "Password must be at least 6 characters").optional(),
+        password: z
+          .string()
+          .min(6, "Password must be at least 6 characters")
+          .optional(),
         phone: z.number().min(10, "Phone number is invalid").optional(),
         role: z.string().min(1, "Invalid role").optional(),
         code: z.string().min(1, "Invalid Code").optional(),
