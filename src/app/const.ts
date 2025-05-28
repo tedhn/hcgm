@@ -12,3 +12,10 @@ export const Category: DropDownType[] = [
   { id: 1, name: "Product" },
   { id: 2, name: "Speciality" },
 ];
+
+export const REGION_LABELS: Record<string, string> = {
+  SOUTH: "South",
+  EASTCOAST: "East Coast",
+  NORTH: "North",
+  CENTRAL: "Central",
+};

@@ -1,3 +1,5 @@
+import { type REGION } from "@prisma/client";
+
 export type UserType = {
   ID: number;
   CREATED_AT: Date;
@@ -6,6 +8,7 @@ export type UserType = {
   PHONE: string;
   ROLE: string;
   CODE: string;
+  REGION: REGION;
 };
 
 export type CustomerType = {

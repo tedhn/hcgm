@@ -16,6 +16,7 @@ model Admin {
   PHONE       String        @default("")
   ROLE        String        @default("")
   PASSWORD    String        @default("")
+  REGION      REGION        @default(ALL)
   CREATED_AT  DateTime      @default(now()) @db.Timestamptz(6)
   Transaction Transaction[]
 }
@@ -80,4 +81,12 @@ model TransactionDetail {
   PRODUCT_ID     Int
   QTY            Int
   UNIT_PRICE     Float
+}
+
+enum REGION {
+  ALL
+  SOUTH
+  EASTCOAST
+  NORTH
+  CENTRAL
 }

@@ -14,3 +14,8 @@ export function middleware(request: NextRequest) {
   url.searchParams.set("viewport", viewport);
   return NextResponse.rewrite(url);
 }
+
+
+export function isAdmin(role : string){
+  return role === "admin";
+}

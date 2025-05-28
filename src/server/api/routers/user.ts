@@ -39,14 +39,8 @@ export const userRouter = createTRPCRouter({
     const customers = await ctx.db.customer.findMany();
 
     const safeAdmin = admin.map((a: Admin) => {
-      return {
-        ID: a.ID,
-        NAME: a.NAME,
-        EMAIL: a.EMAIL,
-        PHONE: a.PHONE,
-        ROLE: a.ROLE,
-        CODE: a.CODE,
-      };
+      const { PASSWORD, ...safeAdmin } = a;
+      return safeAdmin;
     });
 
     //@ts-expeect-error any

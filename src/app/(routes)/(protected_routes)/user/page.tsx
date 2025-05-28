@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
@@ -18,6 +16,7 @@ import { MoreHorizontal, Pencil, Trash } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import type { UserType, CustomerType } from "~/lib/types";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "~/components/ui/tabs";
+import { REGION_LABELS } from "~/app/const";
 
 const UserPage = () => {
   const current_path = usePathname();
@@ -30,10 +29,10 @@ const UserPage = () => {
   const deleteMutation = api.user.delete.useMutation();
 
   useEffect(() => {
-    console.log(typeof api.user.getAll);
+    console.log(userData);
     try {
-      if (userData?.admin && userData.customers) {
-        setUserData(userData.admin);
+      if (userData?.safeAdmin && userData.customers) {
+        setUserData(userData.safeAdmin);
         setCustomerData(userData.customers);
       }
     } catch (e) {
@@ -97,13 +96,6 @@ const UserPage = () => {
       },
     },
     {
-      accessorKey: "password",
-      header: "Password",
-      cell: ({}) => {
-        return <div>**********</div>;
-      },
-    },
-    {
       accessorKey: "role",
       header: "Role",
       cell: ({ row }) => {
@@ -112,6 +104,16 @@ const UserPage = () => {
         const outputText = role
           ? role.charAt(0).toUpperCase() + role.slice(1)
           : "-";
+
+        return <div>{outputText}</div>;
+      },
+    },
+    {
+      accessorKey: "REGION",
+      header: "Region",
+      cell: ({ row }) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        const outputText = REGION_LABELS[row.original.REGION] ?? "-";
 
         return <div>{outputText}</div>;
       },
