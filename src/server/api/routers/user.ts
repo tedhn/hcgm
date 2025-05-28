@@ -1,3 +1,5 @@
+import { type Admin } from "@prisma/client";
+
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
@@ -16,9 +18,7 @@ export const userRouter = createTRPCRouter({
   sendEmail: publicProcedure
     .input(z.object({ email: z.string().email() }))
     .mutation(async ({ input, ctx }) => {
-
-
-      console.log(input.email)
+      console.log(input.email);
       const { data, error } = await resend.emails.send({
         from: "Acme <onboarding@resend.dev>",
         to: [input.email],
@@ -38,9 +38,20 @@ export const userRouter = createTRPCRouter({
     const admin = await ctx.db.admin.findMany();
     const customers = await ctx.db.customer.findMany();
 
+    const safeAdmin = admin.map((a: Admin) => {
+      return {
+        ID: a.ID,
+        NAME: a.NAME,
+        EMAIL: a.EMAIL,
+        PHONE: a.PHONE,
+        ROLE: a.ROLE,
+        CODE: a.CODE,
+      };
+    });
+
     //@ts-expeect-error any
-    return { admin, customers } as {
-      admin: UserType[];
+    return { safeAdmin, customers } as {
+      safeAdmin: UserType[];
       customers: CustomerType[];
     };
   }),
@@ -138,7 +149,7 @@ export const userRouter = createTRPCRouter({
       }
 
       // an empty object to fill the updated data
-      const updateData: UserType = {} as UserType;
+      const updateData: Admin = {} as Admin;
 
       // checking each field to see if any of the data has been updated
       if (input.name) updateData.NAME = input.name;

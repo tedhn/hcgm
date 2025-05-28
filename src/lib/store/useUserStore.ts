@@ -1,11 +1,11 @@
 "use client";
 
-import { type Admin } from "@prisma/client";
 import { create } from "zustand";
+import { type UserType } from "../types";
 
 interface UserState {
-  user: Admin | null;
-  setUser: (data: Admin) => void;
+  user: UserType | null;
+  setUser: (data: UserType) => void;
 }
 
 export const useUserStore = create<UserState>((set) => ({

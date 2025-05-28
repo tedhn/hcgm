@@ -10,8 +10,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "~/components/ui/sidebar";
-import { Home, Package, ShoppingCartIcon, User } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { Home, LogOut, Package, ShoppingCartIcon, User } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 import Logo from "~/assets/icon.svg";
 import Image from "next/image";
@@ -43,10 +43,7 @@ const items = [
 ];
 
 export function AppSidebar() {
-  const router = useRouter();
   const path = usePathname();
-
-  console.log(path);
 
   return (
     <Sidebar collapsible="icon" variant="floating">
@@ -67,27 +64,39 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    className={clsx(
-                      path.replace("/", "") === item.url &&
-                        "bg-white/30 hover:bg-white/30",
-                    )}
-                  >
-                    <Link href={`/${item.url}`} prefetch={false} >
-                      <item.icon size={64} />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              <div className="flex-1">
+                {items.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      className={clsx(
+                        path.replace("/", "") === item.url &&
+                          "bg-white/30 hover:bg-white/30",
+                      )}
+                    >
+                      <Link href={`/${item.url}`} prefetch={false}>
+                        <item.icon size={64} />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </div>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter />
+
+      <SidebarFooter>
+        <SidebarMenuItem key={"logout"}>
+          <SidebarMenuButton asChild>
+            <Link href={`/auth/login`} prefetch={false}>
+              <LogOut size={64} />
+              <span>Log Out</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarFooter>
     </Sidebar>
   );
 }

@@ -1,12 +1,11 @@
 export type UserType = {
   ID: number;
   CREATED_AT: Date;
-  NAME?: string | null;
-  PASSWORD?: string | null;
-  EMAIL?: string | null;
-  PHONE?: string | null;
-  ROLE?: string | null;
-  CODE?: string | null;
+  NAME: string;
+  EMAIL: string;
+  PHONE: string;
+  ROLE: string;
+  CODE: string;
 };
 
 export type CustomerType = {
