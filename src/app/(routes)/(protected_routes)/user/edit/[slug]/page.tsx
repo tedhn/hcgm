@@ -36,15 +36,15 @@ const EditUserPage = () => {
 
   useEffect(() => {
     if (data && !isLoading) {
-      setCode(data.CODE!);
-      setName(data.NAME!);
-      setPhone(data.PHONE!);
-      setEmail(data.EMAIL!);
-      setPassword(data.PASSWORD!);
-      // setRole(data.ROLE!.replace("_", " ").);
+      setCode(data.CODE);
+      setName(data.NAME);
+      setPhone(data.PHONE);
+      setEmail(data.EMAIL);
+      setPassword(data.PASSWORD);
+      // setRole(data.ROLE.replace("_", " ").);
 
       const role = Roles.find(
-        (r) => r.name.toUpperCase() === data.ROLE!.replace("_", " "),
+        (r) => r.name.toUpperCase() === data.ROLE.replace("_", " "),
       );
 
       if (role) {
