@@ -20,7 +20,6 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
-import { DataTablePagination } from "./data-table-pagination";
 import type { ForecastRow } from "../(routes)/(protected_routes)/dashboard/page";
 // Add a new prop to identify which key (mt or costing) this table modifies
 interface DataTableProps<TData, TValue> {
@@ -167,7 +166,7 @@ export function EditableDataTable<TData extends object, TValue>({
         </Table>
       </div>
 
-      <DataTablePagination table={table} />
+      {/* <DataTablePagination table={table} /> */}
     </div>
   );
 }

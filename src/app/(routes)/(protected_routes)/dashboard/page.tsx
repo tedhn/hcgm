@@ -1,12 +1,20 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Button } from "~/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { useUserStore } from "~/lib/store/useUserStore";
 import { api } from "~/trpc/react";
 import type { ColumnDef, Row } from "@tanstack/react-table";
 import { EditableDataTable } from "~/app/_components/editable-data-table";
 import toast from "react-hot-toast";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 export type ForecastRow = {
   id: number;
@@ -54,11 +62,6 @@ export const calculateTotal = (arr: ForecastRow[] | undefined) => {
 };
 
 const DashboardPage = () => {
-  const { mutate, isPending } = api.user.sendEmail.useMutation();
-
-  const { user } = useUserStore();
-
-  const utils = api.useUtils();
   const updateMutation = api.dashboard.updateForecast.useMutation();
 
   const { data: forecast, isLoading } = api.dashboard.getForecast.useQuery<{
@@ -72,10 +75,6 @@ const DashboardPage = () => {
   }>({ mt: [], costing: [] });
 
   const handleUpdateData = (data: ForecastRow, value: number, key: string) => {
-    console.log(data);
-    console.log(key);
-    console.log(typeof value);
-
     if (Number.isNaN(+value)) {
       toast.error("Please enter a valid number.");
       return;
@@ -95,10 +94,6 @@ const DashboardPage = () => {
     }
 
     updateMutation.mutate({ ...data, [key]: +value });
-  };
-
-  const handleSendEmail = async () => {
-    mutate({ email: "heinhtetnaing186@gmail.com" });
   };
 
   const forecastColumns: ColumnDef<ForecastRow>[] = [
@@ -155,7 +150,7 @@ const DashboardPage = () => {
   ];
 
   useEffect(() => {
-    setLocalData(forecast ? forecast : { mt: [], costing: [] });
+    setLocalData(forecast ?? { mt: [], costing: [] });
   }, [forecast]);
 
   return (
@@ -168,48 +163,96 @@ const DashboardPage = () => {
           <TabsTrigger value="currency">Currency</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="weight"></TabsContent>
+        <TabsContent value="weight">
+          {" "}
+          <section className="space-y-4 rounded-md p-4">
+            <h2
+              className="mb-4 text-xl font-semibold"
+              style={{ color: "#254336" }}
+            >
+              Weights
+            </h2>
+            <EditableDataTable
+              columns={forecastColumns}
+              data={calculateTotal(
+                localData.mt.map((row) => ({ ...row, type: "MT" })),
+              )}
+              isLoading={isLoading}
+              onDataChange={handleUpdateData}
+              setLocalData={setLocalData}
+            />
 
-        <TabsContent value="currency"></TabsContent>
+            <div className="h-96 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={localData.mt}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="item_group" />
+                  <YAxis
+                    tickFormatter={(value: number) => value.toLocaleString()}
+                  />
+                  <Tooltip
+                    formatter={(value: number) => value.toLocaleString()}
+                  />
+                  <Legend />
+                  <Bar dataKey="central" fill="#8884d8" />
+                  <Bar dataKey="e_coast" fill="#82ca9d" />
+                  <Bar dataKey="south" fill="#ffc658" />
+                  <Bar dataKey="north" fill="#ff8042" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </section>
+        </TabsContent>
+
+        <TabsContent value="currency">
+          {" "}
+          <section className="space-y-4 rounded-md p-4">
+            <h2
+              className="mb-4 text-xl font-semibold"
+              style={{ color: "#254336" }}
+            >
+              Cost
+            </h2>
+            <EditableDataTable
+              columns={forecastColumns}
+              data={calculateTotal(
+                localData.costing.map((row) => ({ ...row, type: "COSTING" })),
+              )}
+              isLoading={isLoading}
+              onDataChange={handleUpdateData}
+              setLocalData={setLocalData}
+            />
+
+            <div className="h-96 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={localData.costing}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="item_group" />
+                  <YAxis
+                    tickFormatter={(value: number) =>
+                      `${(value / 1000000).toFixed(0)}m`
+                    }
+                  />
+                  <Tooltip
+                    formatter={(value: number) => value.toLocaleString()}
+                  />
+                  <Legend />
+                  <Bar dataKey="central" fill="#8884d8" />
+                  <Bar dataKey="e_coast" fill="#82ca9d" />
+                  <Bar dataKey="south" fill="#ffc658" />
+                  <Bar dataKey="north" fill="#ff8042" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </section>
+        </TabsContent>
       </Tabs>
-
-      <div className="flex flex-col gap-8">
-        <section className="rounded-md p-4">
-          <h2
-            className="mb-4 text-xl font-semibold"
-            style={{ color: "#254336" }}
-          >
-            Weights
-          </h2>
-          <EditableDataTable
-            columns={forecastColumns}
-            data={calculateTotal(
-              localData.mt.map((row) => ({ ...row, type: "MT" })),
-            )}
-            isLoading={isLoading}
-            onDataChange={handleUpdateData}
-            setLocalData={setLocalData}
-          />
-        </section>
-
-        <section className="rounded-md p-4">
-          <h2
-            className="mb-4 text-xl font-semibold"
-            style={{ color: "#254336" }}
-          >
-            Cost
-          </h2>
-          <EditableDataTable
-            columns={forecastColumns}
-            data={calculateTotal(
-              localData.costing.map((row) => ({ ...row, type: "COSTING" })),
-            )}
-            isLoading={isLoading}
-            onDataChange={handleUpdateData}
-            setLocalData={setLocalData}
-          />
-        </section>
-      </div>
     </div>
   );
 };
