@@ -45,6 +45,10 @@ const items = [
 export function AppSidebar() {
   const path = usePathname();
 
+  const handleLogout = () => {
+    localStorage.removeItem("USER-HCGM");
+  };
+
   return (
     <Sidebar collapsible="icon" variant="floating">
       <SidebarHeader>
@@ -90,7 +94,7 @@ export function AppSidebar() {
       <SidebarFooter>
         <SidebarMenuItem key={"logout"}>
           <SidebarMenuButton asChild>
-            <Link href={`/auth/login`} prefetch={false}>
+            <Link href={`/auth/login`} onClick={handleLogout} prefetch={false}>
               <LogOut size={64} />
               <span>Log Out</span>
             </Link>

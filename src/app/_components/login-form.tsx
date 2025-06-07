@@ -16,6 +16,7 @@ import InputWithLabel from "~/components/ui/input-with-label";
 import { useUserStore } from "~/lib/store/useUserStore";
 import toast from "react-hot-toast";
 import type { UserType } from "~/lib/types";
+import type { TRPCError } from "@trpc/server";
 
 export function LoginForm({
   className,
@@ -27,21 +28,14 @@ export function LoginForm({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const { mutateAsync, isPending, error, isError } = api.user.login.useMutation(
-    {
-      onSuccess: (data) => {
-        console.log("data", data);
+  const { mutateAsync, isPending } = api.user.login.useMutation({
+    onSuccess: (data) => {
+      setUser(data);
+      localStorage.setItem("USER-HCGM", JSON.stringify(data));
 
-        setUser(data);
-        localStorage.setItem("USER-HCGM", JSON.stringify(data));
-
-        return router.push("/dashboard");
-      },
-      onError: (error) => {
-        console.log("error", error.message);
-      },
+      return router.push("/dashboard");
     },
-  );
+  });
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -52,7 +46,9 @@ export function LoginForm({
       .promise(promise, {
         loading: "Logging in...",
         success: "Login successful",
-        error: "Login failed",
+        error: (err: TRPCError) => {
+          return err.message;
+        },
       })
       .catch((err) => console.log(err));
   };
@@ -85,44 +81,10 @@ export function LoginForm({
                 value={password}
                 setValue={setPassword}
               />
-              {/*             
-              <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                  <a
-                    href="forget-password"
-                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                  >
-                    Forgot your password?
-                  </a>
-                </div>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="********"
-                  required
-                  disabled={isPending}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div> */}
-
-              {error && isError && (
-                <div className="text-xs text-red-500">{error.message}</div>
-              )}
               <Button type="submit" className="w-full" disabled={isPending}>
                 {isPending ? <LoadingSpinner /> : "Login"}
               </Button>
-              {/* <Button variant="outline" className="w-full">
-                Login with Google
-              </Button> */}
             </div>
-            {/* <div className="mt-4 text-center text-sm">
-              Don&apos;t have an account?{" "}
-              <a href="#" className="underline underline-offset-4">
-                Sign up
-              </a>
-            </div> */}
           </form>
         </CardContent>
       </Card>
