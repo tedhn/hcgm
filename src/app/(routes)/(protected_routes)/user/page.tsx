@@ -261,7 +261,7 @@ const UserPage = () => {
 
   return (
     <>
-      <div className="w-full px-0 py-4 lg:px-14">
+      <div className="w-full px-0 py-4 lg:px-4">
         <div className="flex items-center justify-between">
           <h1 className="mb-6 text-3xl">Users</h1>
 

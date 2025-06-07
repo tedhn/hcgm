@@ -15,7 +15,6 @@ export function middleware(request: NextRequest) {
   return NextResponse.rewrite(url);
 }
 
-
-export function isAdmin(role : string){
+export function isAdmin(role: string) {
   return role === "admin";
 }
