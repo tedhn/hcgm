@@ -32,7 +32,6 @@ export const productRouter = createTRPCRouter({
     )
 
     .mutation(async ({ input, ctx }) => {
-      console.log(input);
       const existingProduct = await ctx.db.product.findFirst({
         where: { CODE: input.code },
       });
