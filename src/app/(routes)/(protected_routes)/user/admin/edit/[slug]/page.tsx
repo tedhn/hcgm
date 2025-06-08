@@ -1,5 +1,5 @@
-"use client";
-import { useRouter } from "next/navigation";
+import type { Admin } from "@prisma/client";
+import { useRouter, useParams } from "next/navigation";
 import React, { useEffect } from "react";
 import BackButton from "~/app/_components/back-button";
 import { Roles } from "~/app/const";
@@ -16,8 +16,11 @@ import {
 import { useIsMobile } from "~/hooks/useMobile";
 import { api } from "~/trpc/react";
 
-const CreateUserPage = () => {
+const EditUserPage = () => {
   const router = useRouter();
+  const params = useParams();
+  const isMobile = useIsMobile();
+
   const [code, setCode] = React.useState("");
   const [name, setName] = React.useState("");
   const [phone, setPhone] = React.useState("");
@@ -25,42 +28,62 @@ const CreateUserPage = () => {
   const [password, setPassword] = React.useState("");
   const [role, setRole] = React.useState<string>("");
 
-  const { mutate, data, isPending, error, isError } =
-    api.user.create.useMutation();
+  const adminId = params.slug ? Number(params.slug) : null;
+  const { data, isLoading } = api.user.getOne.useQuery(
+    { id: adminId ?? -1, type: "customer" },
+    { enabled: !!adminId },
+  );
 
-  const isMobile = useIsMobile();
-
-  const handleCreate = async () => {
-    console.log(role);
-
-    if (!isNaN(+phone)) {
-      mutate({
-        name,
-        email,
-        password,
-        phone: +phone,
-        role: role.toUpperCase().replaceAll(" ", "_"),
-        code,
-      });
-    }
-  };
+  const {
+    mutate,
+    isPending,
+    data: editData,
+  } = api.user.editAdmin.useMutation();
 
   useEffect(() => {
-    if (!isPending && data) {
-      if (isError) {
-        console.log(error);
-        return;
-      }
+    if (data && !isLoading) {
+      const admin = data as Admin;
+      setCode(admin.CODE);
+      setName(admin.NAME);
+      setPhone(admin.PHONE);
+      setEmail(admin.EMAIL);
+      setPassword(admin.PASSWORD);
+      // setRole(admin.ROLE.replace("_", " ").);
 
-      router.push("/user");
+      const role = Roles.find(
+        (r) =>
+          r.name.toLowerCase() === admin.ROLE.replace("_", " ").toLowerCase(),
+      );
+
+      if (role) {
+        console.log(role);
+        setRole(role.name);
+      }
     }
-  }, [data, isPending, error, isError, router]);
+  }, [data, isLoading]);
+
+  useEffect(() => {
+    if (!isPending && editData) router.push(`/user`);
+  }, [isPending, router, editData]);
+
+  const handleEdit = () => {
+    console.log("edit", data?.ID);
+    mutate({
+      id: data!.ID,
+      name,
+      email,
+      password,
+      phone: +phone,
+      role: role.toUpperCase().replaceAll(" ", "_"),
+      code,
+    });
+  };
 
   return (
     <div className="w-full px-0 pt-4 lg:px-14">
       {!isMobile && <BackButton />}
 
-      <h1 className="my-0 mb-10 text-3xl lg:my-10">Create User</h1>
+      <h1 className="my-0 mb-10 text-3xl lg:my-10">Edit User</h1>
 
       <div className="flex w-full flex-col gap-6 lg:w-fit">
         <InputWithLabel label="Code" value={code} setValue={setCode} />
@@ -85,18 +108,17 @@ const CreateUserPage = () => {
           </Select>
         </div>
 
-        <InputWithLabel
+        {/* <InputWithLabel
           label="Password"
           value={password}
           setValue={setPassword}
-        />
+        /> */}
 
-        <Button className="w-fit" onClick={handleCreate}>
-          Create
+        <Button className="w-fit" onClick={handleEdit}>
+          Edit
         </Button>
       </div>
     </div>
   );
 };
-
-export default CreateUserPage;
+export default EditUserPage;

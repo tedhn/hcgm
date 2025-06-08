@@ -34,7 +34,7 @@ model Customer {
   PHONE_NO              String?       @default("")
   ADDRESS               String?       @default("")
   CREDIT_TERM           String        @default("")
-  ADMIN_ID              Int           @default(0)
+  ADMIN_ID              Int
   CREDIT_LIMIT          Float         @default(0)
   CREATED_AT            DateTime      @default(now()) @db.Timestamptz(6)
   Transaction           Transaction[]
@@ -104,4 +104,10 @@ enum REGION {
   EASTCOAST
   NORTH
   CENTRAL
+}
+
+enum ROLE {
+  MASTER_ADMIN
+  MANAGER
+  SALESPERSON
 }

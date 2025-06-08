@@ -1,11 +1,31 @@
+// constants/enums.ts
 import type { DropDownType } from "~/lib/types";
+
+// ✅ Manually define enums (mirroring @prisma/client enums)
+export enum ROLE {
+  MASTER_ADMIN = "MASTER_ADMIN",
+  MANAGER = "MANAGER",
+  SALESPERSON = "SALESPERSON",
+}
+
+export enum REGION {
+  CENTRAL = "CENTRAL",
+  EASTCOAST = "EASTCOAST",
+  SOUTH = "SOUTH",
+  NORTH = "NORTH",
+}
 
 export const Roles: DropDownType[] = [
   { id: 1, name: "Master Admin" },
-  { id: 2, name: "General Manager" },
-  { id: 3, name: "Manager Account" },
-  { id: 4, name: "Coordinator" },
-  { id: 5, name: "Salesperson" },
+  { id: 2, name: "Manager" },
+  { id: 3, name: "Salesperson" },
+];
+
+export const Regions: DropDownType[] = [
+  { id: 1, name: "Central" },
+  { id: 2, name: "East Coast" },
+  { id: 3, name: "South" },
+  { id: 4, name: "North" },
 ];
 
 export const Category: DropDownType[] = [
@@ -13,9 +33,15 @@ export const Category: DropDownType[] = [
   { id: 2, name: "Speciality" },
 ];
 
-export const REGION_LABELS: Record<string, string> = {
-  SOUTH: "South",
-  EASTCOAST: "East Coast",
-  NORTH: "North",
-  CENTRAL: "Central",
+export const REGION_LABELS: Record<REGION, string> = {
+  [REGION.SOUTH]: "South",
+  [REGION.EASTCOAST]: "East Coast",
+  [REGION.NORTH]: "North",
+  [REGION.CENTRAL]: "Central",
+};
+
+export const ROLE_LABELS: Record<ROLE, string> = {
+  [ROLE.MASTER_ADMIN]: "Master Admin",
+  [ROLE.MANAGER]: "Manager",
+  [ROLE.SALESPERSON]: "Salesperson",
 };

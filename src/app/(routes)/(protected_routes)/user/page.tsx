@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
@@ -5,34 +7,30 @@ import React, { useEffect, useState } from "react";
 import { DataTable } from "~/app/_components/data-table";
 import { api } from "~/trpc/react";
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
 import { Button } from "~/components/ui/button";
-import { MoreHorizontal, Pencil, Trash } from "lucide-react";
+import { Pencil, Trash } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import type { UserType, CustomerType } from "~/lib/types";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "~/components/ui/tabs";
-import { REGION_LABELS } from "~/app/const";
+import { type REGION, REGION_LABELS } from "~/app/const";
+import toast from "react-hot-toast";
 
 const UserPage = () => {
   const current_path = usePathname();
   const router = useRouter();
-  const [adminData, setUserData] = useState<UserType[]>([]);
+
+  const [currentTab, setCurrentTab] = useState<string>("admin");
+  const [adminData, setAdminData] = useState<UserType[]>([]);
   const [customerData, setCustomerData] = useState<CustomerType[]>([]);
 
   const { data: userData, isLoading } = api.user.getAll.useQuery();
 
-  const deleteMutation = api.user.delete.useMutation();
+  const deleteUserMutation = api.user.deleteUser.useMutation();
 
   useEffect(() => {
-    console.log(userData);
     try {
       if (userData?.safeAdmin && userData.customers) {
-        setUserData(userData.safeAdmin);
+        setAdminData(userData.safeAdmin);
         setCustomerData(userData.customers);
       }
     } catch (e) {
@@ -40,14 +38,29 @@ const UserPage = () => {
     }
   }, [userData]);
 
-  const handleDelete = (id: number) => {
-    console.log("delete", id);
+  const handleDelete = async (id: number, type: string) => {
+    const promise = deleteUserMutation.mutateAsync({ id: id, type });
 
-    deleteMutation.mutate({ id });
+    await toast.promise(promise, {
+      loading: "Deleting...",
+      success: "User deleted successfully",
+      error: "Error deleting user",
+    });
 
-    const newUserTypeData = adminData.filter((item) => item.ID !== id);
+    switch (type) {
+      case "admin":
+        const newAdminTypeData = adminData.filter((item) => item.ID !== id);
+        setAdminData(newAdminTypeData);
 
-    setUserData(newUserTypeData);
+        break;
+      case "customer":
+        const newCustomerTypeData = customerData.filter(
+          (item) => item.ID !== id,
+        );
+        setCustomerData(newCustomerTypeData);
+
+        break;
+    }
   };
 
   const adminColumns: ColumnDef<UserType>[] = [
@@ -112,8 +125,7 @@ const UserPage = () => {
       accessorKey: "REGION",
       header: "Region",
       cell: ({ row }) => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        const outputText = REGION_LABELS[row.original.REGION] ?? "-";
+        const outputText = REGION_LABELS[row.original.REGION as REGION] ?? "-";
 
         return <div>{outputText}</div>;
       },
@@ -132,33 +144,22 @@ const UserPage = () => {
       cell: ({ row }) => {
         return (
           <div className="flex items-center justify-center">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                  <span className="sr-only">Open menu</span>
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="center">
-                {/* <DropdownMenuLabel>Actions</DropdownMenuLabel> */}
-                <DropdownMenuItem
-                  onClick={() =>
-                    router.push(current_path + `/edit/${row.original.ID}`)
-                  }
-                  className="focus:bg-gray-100"
-                >
-                  <Pencil className="h-2 w-2" />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="text-red-500 focus:bg-red-500/10 focus:text-red-500"
-                  onClick={() => handleDelete(row.original.ID)}
-                >
-                  <Trash className="h-2 w-2" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button
+              variant="ghost"
+              className="text-blue-500 focus:bg-blue-500/10 focus:text-blue-500"
+              onClick={() =>
+                router.push(current_path + `/admin/edit/${row.original.ID}`)
+              }
+            >
+              <Pencil className="h-2 w-2" />
+            </Button>
+            <Button
+              variant="ghost"
+              className="text-red-500 focus:bg-red-500/10 focus:text-red-500"
+              onClick={() => handleDelete(row.original.ID, "admin")}
+            >
+              <Trash className="h-2 w-2" />
+            </Button>
           </div>
         );
       },
@@ -174,10 +175,12 @@ const UserPage = () => {
     {
       accessorKey: "CODE",
       header: "Code",
+      size: 110,
     },
     {
       accessorKey: "NAME",
       header: "Name",
+      size: 300,
     },
     {
       accessorKey: "EMAIL",
@@ -194,35 +197,32 @@ const UserPage = () => {
         const phone = row.original.PHONE_NO;
         return <div>{phone ?? "-"}</div>;
       },
+      size: 150,
     },
     {
       accessorKey: "address",
       header: "Address",
       cell: ({ row }) => {
         const address = row.original.ADDRESS;
-        return <div>{address ?? "-"}</div>;
+        return <div>{address === "" || !address ? "-" : address}</div>;
       },
+      size: 300,
     },
     {
       accessorKey: "creditTerm",
       header: "Credit Term",
       cell: ({ row }) => {
-        return row.original.CREDIT_TERM ?? "-";
+        return row.original.CREDIT_TERM?.replace("Net", "").trim() ?? "-";
       },
+      size: 110,
     },
     {
       accessorKey: "creditLimit",
       header: "Credit Limit",
       cell: ({ row }) => {
-        return row.original.CREDIT_LIMIT?.toFixed(2) ?? "0.00";
+        return `${row.original.CREDIT_LIMIT! / 1000}k`;
       },
-    },
-    {
-      accessorKey: "created_at",
-      header: "Created At",
-      cell: ({ row }) => {
-        return new Date(row.original.CREATED_AT).toLocaleDateString();
-      },
+      size: 110,
     },
     {
       id: "actions",
@@ -230,29 +230,22 @@ const UserPage = () => {
       cell: ({ row }) => {
         return (
           <div className="flex items-center justify-center">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                  <span className="sr-only">Open menu</span>
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="center">
-                <DropdownMenuItem
-                  onClick={() =>
-                    router.push(`${current_path}/edit/${row.original.ID}`)
-                  }
-                  className="focus:bg-gray-100"
-                >
-                  <Pencil className="h-2 w-2" />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem className="text-red-500 focus:bg-red-500/10 focus:text-red-500">
-                  <Trash className="h-2 w-2" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button
+              variant="ghost"
+              className="text-blue-500 focus:bg-blue-500/10 focus:text-blue-500"
+              onClick={() =>
+                router.push(`${current_path}/customer/edit/${row.original.ID}`)
+              }
+            >
+              <Pencil className="h-2 w-2" />
+            </Button>
+            <Button
+              variant="ghost"
+              className="text-red-500 focus:bg-red-500/10 focus:text-red-500"
+              onClick={() => handleDelete(row.original.ID, "customer")}
+            >
+              <Trash className="h-2 w-2" />
+            </Button>
           </div>
         );
       },
@@ -267,13 +260,17 @@ const UserPage = () => {
 
           <Button
             className="mb-4"
-            onClick={() => router.push(current_path + "/create")}
+            onClick={() => router.push(current_path + `/${currentTab}/create`)}
           >
-            Create User
+            Create {currentTab === "admin" ? "Admin" : "Customer"}
           </Button>
         </div>
 
-        <Tabs defaultValue="admin" className="w-full">
+        <Tabs
+          value={currentTab}
+          onValueChange={setCurrentTab}
+          className="w-full"
+        >
           <TabsList className="mb-4">
             <TabsTrigger value="admin">Admins</TabsTrigger>
             <TabsTrigger value="customer">Customers</TabsTrigger>

@@ -12,6 +12,32 @@ const LoginSchema = z.object({
   password: z.string(),
 });
 
+export const customerBaseSchema = z.object({
+  CODE: z.string(),
+  NAME: z.string(),
+  SSM_REGISTRATION_NO: z.string().optional(),
+  TAX_IDENTIFICATION_NO: z.string().optional(),
+  SST_NO: z.string().optional(),
+  MSIC_CODE: z.string().optional(),
+  BUSINESS_NATURE: z.string().optional(),
+  PIC_NAME: z.string().optional(),
+  EMAIL: z.string().optional(),
+  PHONE_NO: z.string(),
+  ADDRESS: z.string(),
+  CREDIT_TERM: z.string(),
+  CREDIT_LIMIT: z.number(),
+});
+
+export const createCustomerSchema = customerBaseSchema;
+
+export const updateCustomerSchema = customerBaseSchema.extend({
+  ID: z.number(), // or z.number() depending on your db
+});
+
+export const deleteCustomerSchema = z.object({
+  ID: z.number(), // or z.number()
+});
+
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const userRouter = createTRPCRouter({
@@ -56,15 +82,23 @@ export const userRouter = createTRPCRouter({
   }),
 
   getOne: publicProcedure
-    .input(z.object({ id: z.number() }))
+    .input(z.object({ id: z.number(), type: z.string() }))
     .query(async ({ input, ctx }) => {
-      const admin = await ctx.db.admin.findFirst({
-        where: { ID: input.id },
-      });
-      return admin;
+      switch (input.type) {
+        case "customer":
+          const customer = await ctx.db.customer.findFirst({
+            where: { ID: input.id },
+          });
+          return customer;
+        case "admin":
+          const admin = await ctx.db.admin.findFirst({
+            where: { ID: input.id },
+          });
+          return admin;
+      }
     }),
 
-  create: publicProcedure
+  createAdmin: publicProcedure
     .input(
       z.object({
         name: z.string().min(1, "Name is required"),
@@ -79,7 +113,6 @@ export const userRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       // Check if a user with the same email already exists
 
-      console.log(input);
       const existingUser = await ctx.db.admin.findFirst({
         where: { EMAIL: input.email },
       });
@@ -111,7 +144,7 @@ export const userRouter = createTRPCRouter({
       };
     }),
 
-  edit: publicProcedure
+  editAdmin: publicProcedure
     .input(
       z.object({
         id: z.number(),
@@ -167,30 +200,112 @@ export const userRouter = createTRPCRouter({
       };
     }),
 
-  delete: publicProcedure
-    .input(z.object({ id: z.number() })) // validate email format
+  deleteUser: publicProcedure
+    .input(z.object({ id: z.number(), type: z.string() }))
     .mutation(async ({ input, ctx }) => {
-      // Check if the admin exists
-      const user = await ctx.db.admin.findFirst({
-        where: { ID: +input.id },
+      switch (input.type) {
+        case "admin":
+          // Delete the admin
+          await ctx.db.admin.delete({
+            where: { ID: input.id },
+          });
+          return {
+            success: true,
+            message: `Admin with the ID ${input.id} deleted successfully.`,
+          };
+        case "customer":
+          // Delete the customer
+          await ctx.db.customer.delete({
+            where: { ID: input.id },
+          });
+          return {
+            success: true,
+            message: `Customer with the ID ${input.id} deleted successfully.`,
+          };
+      }
+
+      return {
+        success: true,
+        message: `User ${input.id} deleted successfully.`,
+      };
+    }),
+
+  createCustomer: publicProcedure
+    .input(createCustomerSchema)
+    .mutation(async ({ input, ctx }) => {
+      const existing = await ctx.db.customer.findFirst({
+        where: {
+          EMAIL: input.EMAIL,
+        },
       });
 
-      // check if the user is found
-      if (!user) {
+      if (existing) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "User not found",
+          code: "CONFLICT",
+          message: "Customer with this email already exists",
         });
       }
 
-      // Delete the user
-      await ctx.db.admin.delete({
-        where: { ID: input.id },
+      const newCustomer = await ctx.db.customer.create({
+        data: input,
       });
 
       return {
         success: true,
-        message: `User with email ${input.id} deleted successfully.`,
+        message: "Customer created successfully",
+        customer: newCustomer,
+      };
+    }),
+
+  editCustomer: publicProcedure
+    .input(updateCustomerSchema)
+    .mutation(async ({ input, ctx }) => {
+      const customer = await ctx.db.customer.findUnique({
+        where: { ID: +input.ID },
+      });
+
+      if (!customer) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Customer not found",
+        });
+      }
+
+      const updateData = { ...input };
+
+      const updated = await ctx.db.customer.update({
+        where: { ID: +input.ID },
+        data: updateData,
+      });
+
+      return {
+        success: true,
+        message: `Customer with ID ${input.ID} updated successfully`,
+        customer: updated,
+      };
+    }),
+
+  deleteCustomer: publicProcedure
+    .input(deleteCustomerSchema)
+    .mutation(async ({ input, ctx }) => {
+      const existing = await ctx.db.customer.findUnique({
+        where: { ID: +input.ID },
+      });
+
+      if (!existing) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Customer not found",
+        });
+      }
+
+      await ctx.db.customer.delete({
+        where: { ID: +input.ID },
+      });
+
+      return {
+        success: true,
+        message: `Customer with ID ${input.ID} deleted successfully`,
       };
     }),
 
