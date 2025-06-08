@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import React, { useEffect } from "react";
+import toast from "react-hot-toast";
 import BackButton from "~/app/_components/back-button";
 import { Category } from "~/app/const";
 import { Button } from "~/components/ui/button";
@@ -18,6 +19,7 @@ import { api } from "~/trpc/react";
 
 const CreateProductPage = () => {
   const router = useRouter();
+  const util = api.useUtils();
   const [code, setCode] = React.useState("");
   const [name, setName] = React.useState("");
   const [category, setCategory] = React.useState("");
@@ -25,19 +27,30 @@ const CreateProductPage = () => {
   const [stock, setStock] = React.useState("");
   const [unitPrice, setUnitPrice] = React.useState("");
 
-  const { mutate, data, isPending, error, isError } =
-    api.product.create.useMutation();
+  const { mutateAsync, data, isPending, error, isError } =
+    api.product.create.useMutation({
+      onSuccess: async () => {
+        await util.product.getAll.invalidate();
+        router.push("/products");
+      },
+    });
 
   const isMobile = useIsMobile();
 
   const handleCreate = async () => {
-    mutate({
+    const promise = mutateAsync({
       name,
       category,
       base_uom: baseUom,
       stock: +stock,
       unit_price: +unitPrice,
       code,
+    });
+
+    await toast.promise(promise, {
+      loading: "Creating product...",
+      success: "Product created successfully!",
+      error: "Failed to create product",
     });
   };
 
@@ -80,7 +93,7 @@ const CreateProductPage = () => {
         </div>
 
         <InputWithLabel
-          label="Base UOM"
+          label="Units of Measurement"
           value={baseUom}
           setValue={setBaseUom}
         />
