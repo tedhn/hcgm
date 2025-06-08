@@ -124,33 +124,22 @@ const ProductsPage = () => {
       cell: ({ row }) => {
         return (
           <div className="flex items-center justify-center">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                  <span className="sr-only">Open menu</span>
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="center">
-                {/* <DropdownMenuLabel>Actions</DropdownMenuLabel> */}
-                <DropdownMenuItem
-                  onClick={() =>
-                    router.push(current_path + `/edit/${row.original.ID}`)
-                  }
-                  className="focus:bg-gray-100"
-                >
-                  <Pencil className="h-2 w-2" />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="text-red-500 focus:bg-red-500/10 focus:text-red-500"
-                  onClick={() => handleDelete(row.original.ID)}
-                >
-                  <Trash className="h-2 w-2" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button
+              variant="ghost"
+              className="text-blue-500 focus:bg-blue-500/10 focus:text-blue-500"
+              onClick={() =>
+                router.push(current_path + `/edit/${row.original.ID}`)
+              }
+            >
+              <Pencil className="h-2 w-2" />
+            </Button>
+            <Button
+              variant="ghost"
+              className="text-red-500 focus:bg-red-500/10 focus:text-red-500"
+              onClick={() => handleDelete(row.original.ID)}
+            >
+              <Trash className="h-2 w-2" />
+            </Button>
           </div>
         );
       },

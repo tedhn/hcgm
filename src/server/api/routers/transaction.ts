@@ -158,6 +158,17 @@ export const transactionRouter = createTRPCRouter({
           })),
         });
 
+      for (const product of input.products) {
+        await ctx.db.product.update({
+          where: { ID: product.id },
+          data: {
+            STOCK: {
+              decrement: product.quantity,
+            },
+          },
+        });
+      }
+
       return new Promise((resolve) => {
         resolve({
           success: true,

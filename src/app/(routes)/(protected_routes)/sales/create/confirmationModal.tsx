@@ -51,12 +51,14 @@ const ConfirmSalesModal: React.FC<ConfirmSalesModalProps> = ({
   remarks,
   deliveryLocation,
 }) => {
+  const utils = api.useUtils();
   const { user } = useUserStore();
   const router = useRouter();
 
   const { mutateAsync: createSales, isPending } =
     api.transactions.create.useMutation({
       onSuccess: () => {
+        void utils.transactions.getAll.invalidate();
         onOpenChange(false);
         router.push("/sales");
       },

@@ -12,6 +12,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import type { SalesType } from "~/lib/types";
 import { api } from "~/trpc/react";
 import { Button } from "~/components/ui/button";
+import { renderStatus } from "./page";
+import { LoadingSpinner } from "~/components/ui/loader";
+import toast from "react-hot-toast";
+import { useEffect } from "react";
 
 interface SalesDetailsDialogProps {
   open: boolean;
@@ -28,22 +32,11 @@ const SalesDetailsDialog: React.FC<SalesDetailsDialogProps> = ({
     id: sales.ID,
   });
 
-  if (isLoading) return <Dialog>Loading...</Dialog>;
-  if (error ?? !data) return <div>Error loading sales data.</div>;
-
-  const {
-    DOC_NUM,
-    REF_DOC_NO,
-    TRANSACTION_DATE,
-    CUSTOMER,
-    ADMIN,
-    TOTAL_PRICE,
-    DELIVERY_DATE,
-    SHIPPING_METHOD,
-    COMISSION,
-    REMARK,
-    STATUS,
-  } = data;
+  useEffect(() => {
+    if (error) {
+      toast.error("Failed to fetch sales details.");
+    }
+  }, [error]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -51,117 +44,134 @@ const SalesDetailsDialog: React.FC<SalesDetailsDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Sales Transaction Details</DialogTitle>
         </DialogHeader>
+        {isLoading ? (
+          <div className="flex items-center justify-center">
+            <LoadingSpinner />
+          </div>
+        ) : (
+          <>
+            <Card className="mb-4">
+              <CardHeader>
+                <CardTitle>Basic Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div>
+                  <strong>Document No.:</strong> {data!.DOC_NUM}
+                </div>
+                <div>
+                  <strong>Reference Document No.:</strong>{" "}
+                  {data!.REF_DOC_NO ?? "-"}
+                </div>
+                <div>
+                  <strong>Transaction Date:</strong>{" "}
+                  {format(new Date(data!.TRANSACTION_DATE), "PPP")}
+                </div>
+                <div>
+                  <strong>Status:</strong> {renderStatus(data!.STATUS)}
+                </div>
+              </CardContent>
+            </Card>
 
-        <Card className="mb-4">
-          <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div>
-              <strong>Document No.:</strong> {DOC_NUM}
-            </div>
-            <div>
-              <strong>Reference Document No.:</strong> {REF_DOC_NO ?? "-"}
-            </div>
-            <div>
-              <strong>Transaction Date:</strong>{" "}
-              {format(new Date(TRANSACTION_DATE), "PPP")}
-            </div>
-            <div>
-              <strong>Status:</strong> {STATUS}
-            </div>
-          </CardContent>
-        </Card>
+            <Card className="mb-4">
+              <CardHeader>
+                <CardTitle>Customer Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div>
+                  <strong>Name:</strong> {data!.CUSTOMER?.NAME ?? "-"}
+                </div>
+                <div>
+                  <strong>Email:</strong> {data!.CUSTOMER?.EMAIL ?? "-"}
+                </div>
+                <div>
+                  <strong>Phone:</strong> {data!.CUSTOMER?.PHONE_NO ?? "-"}
+                </div>
+              </CardContent>
+            </Card>
 
-        <Card className="mb-4">
-          <CardHeader>
-            <CardTitle>Customer Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div>
-              <strong>Name:</strong> {CUSTOMER?.NAME ?? "-"}
-            </div>
-            <div>
-              <strong>Email:</strong> {CUSTOMER?.EMAIL ?? "-"}
-            </div>
-            <div>
-              <strong>Phone:</strong> {CUSTOMER?.PHONE_NO ?? "-"}
-            </div>
-          </CardContent>
-        </Card>
+            <Card className="mb-4">
+              <CardHeader>
+                <CardTitle>Admin Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div>
+                  <strong>Name:</strong> {data!.ADMIN?.NAME ?? "-"}
+                </div>
+                <div>
+                  <strong>Email:</strong> {data!.ADMIN?.EMAIL ?? "-"}
+                </div>
+              </CardContent>
+            </Card>
 
-        <Card className="mb-4">
-          <CardHeader>
-            <CardTitle>Admin Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div>
-              <strong>Name:</strong> {ADMIN?.NAME ?? "-"}
-            </div>
-            <div>
-              <strong>Email:</strong> {ADMIN?.EMAIL ?? "-"}
-            </div>
-          </CardContent>
-        </Card>
+            <Card className="mb-4">
+              <CardHeader>
+                <CardTitle>Transaction Details</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {data!.PRODUCTS && data!.PRODUCTS.length > 0 ? (
+                  <table className="min-w-full text-sm">
+                    <thead className="bg-gray-200">
+                      <tr>
+                        <th className="p-2 text-left">Product</th>
+                        <th className="p-2 text-left">Quantity</th>
+                        <th className="p-2 text-left">Unit Price</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data!.PRODUCTS.map((product) => (
+                        <tr key={product.ID} className="border-t">
+                          <td className="p-2">{product.NAME}</td>
+                          <td className="p-2">{product.QTY}</td>
+                          <td className="p-2">
+                            RM{product.UNIT_PRICE.toFixed(2)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div>No transaction details available.</div>
+                )}
+              </CardContent>
+            </Card>
 
-        <Card className="mb-4">
-          <CardHeader>
-            <CardTitle>Transaction Details</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {data.PRODUCTS && data.PRODUCTS.length > 0 ? (
-              <table className="min-w-full text-sm">
-                <thead className="bg-gray-200">
-                  <tr>
-                    <th className="p-2 text-left">Product</th>
-                    <th className="p-2 text-left">Quantity</th>
-                    <th className="p-2 text-left">Unit Price</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.PRODUCTS.map((product) => (
-                    <tr key={product.ID} className="border-t">
-                      <td className="p-2">{product.NAME}</td>
-                      <td className="p-2">{product.QTY}</td>
-                      <td className="p-2">RM{product.UNIT_PRICE.toFixed(2)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <div>No transaction details available.</div>
-            )}
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Other Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div>
+                  <strong>Total Price:</strong> RM{data!.TOTAL_PRICE.toFixed(2)}
+                </div>
+                <div>
+                  <strong>Delivery Date:</strong>{" "}
+                  {data!.DELIVERY_DATE
+                    ? format(new Date(data!.DELIVERY_DATE), "PPP")
+                    : "-"}
+                </div>
+                <div>
+                  <strong>Delivery Location:</strong> {data!.LOCATION ?? "-"}
+                </div>
+                <div>
+                  <strong>Shipping Method:</strong>{" "}
+                  {data!.SHIPPING_METHOD ?? "-"}
+                </div>
+                <div>
+                  <strong>Commission:</strong>{" "}
+                  {data!.COMISSION ? `${data!.COMISSION}%` : "-"}
+                </div>
+                <div>
+                  <strong>Remarks:</strong> {data!.REMARK ?? "-"}
+                </div>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Other Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div>
-              <strong>Total Price:</strong> RM{TOTAL_PRICE.toFixed(2)}
-            </div>
-            <div>
-              <strong>Delivery Date:</strong>{" "}
-              {DELIVERY_DATE ? format(new Date(DELIVERY_DATE), "PPP") : "-"}
-            </div>
-            <div>
-              <strong>Shipping Method:</strong> {SHIPPING_METHOD ?? "-"}
-            </div>
-            <div>
-              <strong>Commission:</strong> {COMISSION ? `${COMISSION}%` : "-"}
-            </div>
-            <div>
-              <strong>Remarks:</strong> {REMARK ?? "-"}
-            </div>
-          </CardContent>
-        </Card>
+            <DialogFooter>
+              <Button onClick={() => onOpenChange(false)}>Close</Button>
+            </DialogFooter>
+          </>
+        )}
       </DialogContent>
-
-      <DialogFooter>
-        <Button onClick={() => onOpenChange(false)}>Close</Button>
-      </DialogFooter>
     </Dialog>
   );
 };

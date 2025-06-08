@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
@@ -7,21 +5,15 @@ import React, { useState } from "react";
 import { DataTable } from "~/app/_components/data-table";
 import { api } from "~/trpc/react";
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
 import { Button } from "~/components/ui/button";
-import { MoreHorizontal, Pencil, Trash } from "lucide-react";
+import { Pencil, Trash } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import type { SalesType } from "~/lib/types";
 import { Badge } from "~/components/ui/badge";
 import SalesDetailsDialog from "./viewModal";
 import toast from "react-hot-toast";
 
-const renderStatus = (status: string) => {
+export const renderStatus = (status: string) => {
   switch (status.toLowerCase()) {
     case "pending":
       return <Badge variant={"pending"}>Pending</Badge>;
@@ -70,7 +62,7 @@ const ProductsPage = () => {
     {
       accessorKey: "ADMIN",
       header: "Admin",
-      size: 120,
+      size: 240,
       cell: ({ row }) => {
         return <div>{row.original.ADMIN?.NAME}</div>;
       },
@@ -78,7 +70,7 @@ const ProductsPage = () => {
     {
       accessorKey: "CUSTOMER",
       header: "Customer",
-      size: 120,
+      size: 240,
       cell: ({ row }) => {
         return <div>{row.original.CUSTOMER?.NAME}</div>;
       },
@@ -87,12 +79,14 @@ const ProductsPage = () => {
     {
       accessorKey: "TOTAL_PRICE",
       header: "Total Price",
+      size: 200,
       cell: ({ row }) => <div>RM {row.original.TOTAL_PRICE}</div>,
     },
     {
       accessorKey: "STATUS",
       header: "Status",
       cell: ({ row }) => renderStatus(row.original.STATUS),
+      size: 100,
     },
     {
       id: "actions",
@@ -100,33 +94,22 @@ const ProductsPage = () => {
       cell: ({ row }) => {
         return (
           <div className="flex items-center justify-center">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                  <span className="sr-only">Open menu</span>
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="center">
-                {/* <DropdownMenuLabel>Actions</DropdownMenuLabel> */}
-                <DropdownMenuItem
-                  onClick={() =>
-                    router.push(current_path + `/edit/${row.original.ID}`)
-                  }
-                  className="focus:bg-gray-100"
-                >
-                  <Pencil className="h-2 w-2" />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="text-red-500 focus:bg-red-500/10 focus:text-red-500"
-                  onClick={() => handleDelete(row.original.ID)}
-                >
-                  <Trash className="h-2 w-2" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button
+              variant="ghost"
+              className="text-blue-500 focus:bg-blue-500/10 focus:text-blue-500"
+              onClick={() =>
+                router.push(current_path + `/edit/${row.original.ID}`)
+              }
+            >
+              <Pencil className="h-2 w-2" />
+            </Button>
+            <Button
+              variant="ghost"
+              className="text-red-500 focus:bg-red-500/10 focus:text-red-500"
+              onClick={() => handleDelete(row.original.ID)}
+            >
+              <Trash className="h-2 w-2" />
+            </Button>
           </div>
         );
       },
