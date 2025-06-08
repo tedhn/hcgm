@@ -86,7 +86,8 @@ export const transactionRouter = createTRPCRouter({
         delivery_date: z.string().min(1, "Delivery date is required"),
         shipping_method: z.string().min(1, "Remark is required"),
         comission: z.number().min(0, "Comision must be a non-negative number"),
-        remark: z.string().min(1, "Remark is required"),
+        remark: z.string().optional(),
+        deliveryLocation: z.string(),
         products: z.array(
           z.object({ id: z.number(), quantity: z.number(), price: z.number() }),
         ),
@@ -94,7 +95,42 @@ export const transactionRouter = createTRPCRouter({
     )
 
     .mutation(async ({ input, ctx }) => {
-      console.log(input);
+      // Step 1: Check stock availability for each product
+      const insufficientStock: {
+        id: number;
+        requested: number;
+        available: number;
+      }[] = [];
+
+      for (const product of input.products) {
+        const existingProduct = await ctx.db.product.findUnique({
+          where: { ID: product.id },
+          select: { STOCK: true },
+        });
+
+        const available = existingProduct?.STOCK ?? 0;
+
+        if (product.quantity > available) {
+          insufficientStock.push({
+            id: product.id,
+            requested: product.quantity,
+            available,
+          });
+        }
+      }
+
+      // Step 2: If any product has insufficient stock, stop the process
+      if (insufficientStock.length > 0) {
+        throw new Error(
+          `Insufficient stock for product(s): ${insufficientStock
+            .map(
+              (p) =>
+                `Product ID ${p.id} (requested: ${p.requested}, available: ${p.available})`,
+            )
+            .join(", ")}`,
+        );
+      }
+
       const transactions = await ctx.db.transaction.create({
         data: {
           DOC_NUM: input.doc_num,
@@ -107,6 +143,7 @@ export const transactionRouter = createTRPCRouter({
           SHIPPING_METHOD: input.shipping_method,
           COMISSION: input.comission,
           REMARK: input.remark,
+          LOCATION: input.deliveryLocation,
           STATUS: "PENDING",
         },
       });
@@ -151,13 +188,12 @@ export const transactionRouter = createTRPCRouter({
         products: z.array(
           z.object({ id: z.number(), quantity: z.number(), price: z.number() }),
         ),
+        deliveryLocation: z.string(),
         status: z.string().min(1, "Status is required"),
       }),
     )
 
     .mutation(async ({ input, ctx }) => {
-      console.log(input);
-
       // Update the transaction in the database
       const updatedTransaction = await ctx.db.transaction.update({
         where: { ID: input.transaction_id }, // Ensure the ID matches
@@ -172,6 +208,7 @@ export const transactionRouter = createTRPCRouter({
           SHIPPING_METHOD: input.shipping_method,
           COMISSION: input.comission,
           REMARK: input.remark,
+          LOCATION: input.deliveryLocation,
           STATUS: input.status, // You can modify this status if needed
         },
       });

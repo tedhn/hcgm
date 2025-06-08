@@ -15,6 +15,7 @@ import type { Customer } from "@prisma/client";
 import { api } from "~/trpc/react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { useUserStore } from "~/lib/store/useUserStore";
 
 interface ConfirmSalesModalProps {
   open: boolean;
@@ -33,6 +34,7 @@ interface ConfirmSalesModalProps {
   shippingMethod: string;
   commission: string;
   remarks: string;
+  deliveryLocation: string;
 }
 
 const ConfirmSalesModal: React.FC<ConfirmSalesModalProps> = ({
@@ -47,13 +49,14 @@ const ConfirmSalesModal: React.FC<ConfirmSalesModalProps> = ({
   shippingMethod,
   commission,
   remarks,
+  deliveryLocation,
 }) => {
+  const { user } = useUserStore();
   const router = useRouter();
 
-  const { mutate: createSales, isPending } =
+  const { mutateAsync: createSales, isPending } =
     api.transactions.create.useMutation({
       onSuccess: () => {
-        toast.success("Sales created successfully");
         onOpenChange(false);
         router.push("/sales");
       },
@@ -63,12 +66,12 @@ const ConfirmSalesModal: React.FC<ConfirmSalesModalProps> = ({
       },
     });
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     const salesData = {
       doc_num: docNumber,
       transaction_date: new Date().toISOString(),
       customer_id: customer.ID + "",
-      admin_id: "3",
+      admin_id: user!.ID + "",
       total_price: parseInt(totalPrice.replace("RM", "")),
       ref_doc_no: referenceDoc,
       delivery_date: deliveryDate
@@ -77,7 +80,7 @@ const ConfirmSalesModal: React.FC<ConfirmSalesModalProps> = ({
       shipping_method: shippingMethod,
       comission: +commission,
       remark: remarks,
-
+      deliveryLocation: deliveryLocation,
       products: productDetails.map((p) => ({
         id: Number(p.id),
         quantity: Number(p.quantity),
@@ -85,12 +88,18 @@ const ConfirmSalesModal: React.FC<ConfirmSalesModalProps> = ({
       })),
     };
 
-    createSales(salesData);
+    const promise = createSales(salesData);
+
+    await toast.promise(promise, {
+      loading: "Creating sales...",
+      success: "Sales created successfully!",
+      error: "Failed to create sales",
+    });
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle>Confirm Sales Creation</DialogTitle>
           <DialogDescription>
@@ -135,7 +144,7 @@ const ConfirmSalesModal: React.FC<ConfirmSalesModalProps> = ({
                         >
                           <td className="p-3">{product.name}</td>
                           <td className="p-3">{product.quantity || "-"}</td>
-                          <td className="p-3">{product.price || "-"}</td>
+                          <td className="p-3">RM{product.price || "-"}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -174,12 +183,7 @@ const ConfirmSalesModal: React.FC<ConfirmSalesModalProps> = ({
           >
             Cancel
           </Button>
-          <Button
-            onClick={() => {
-              handleCreate();
-            }}
-            disabled={isPending}
-          >
+          <Button onClick={handleCreate} disabled={isPending}>
             Confirm
           </Button>
         </DialogFooter>

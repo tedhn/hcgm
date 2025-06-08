@@ -33,6 +33,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import { Textarea } from "~/components/ui/textarea";
+import toast from "react-hot-toast";
+import { de } from "date-fns/locale";
 
 const CreateSalesPage = () => {
   const isMobile = useIsMobile();
@@ -54,14 +57,65 @@ const CreateSalesPage = () => {
   const [shippingMethod, setShippingMethod] = React.useState("");
   const [commission, setCommission] = React.useState("");
   const [remarks, setRemarks] = React.useState("");
+  const [deliveryLocation, setDeliveryLocation] = React.useState("");
   const [deliveryDate, setDeliveryDate] = React.useState<Date | undefined>(
     undefined,
+  );
+
+  const [stockErrors, setStockErrors] = React.useState<Record<string, string>>(
+    {},
   );
 
   const { data: customerData } = api.user.getAllCustomers.useQuery();
   const { data: productData } = api.product.getAll.useQuery<Product[]>();
 
   const handleCreate = async () => {
+    const hasStockErrors = Object.keys(stockErrors).length > 0;
+
+    if (hasStockErrors) {
+      toast.error("Please fix product quantity issues before proceeding.");
+      return;
+    }
+
+    if (!documentNo.trim()) {
+      toast.error("Document number is required.");
+      return;
+    }
+
+    if (!customerId) {
+      toast.error("Customer selection is required.");
+      return;
+    }
+
+    if (productDetails.length === 0) {
+      toast.error("At least one product must be selected.");
+      return;
+    }
+
+    const hasInvalidProductDetails = productDetails.some(
+      (p) => !p.quantity || !p.price || +p.quantity <= 0 || +p.price < 0,
+    );
+
+    if (hasInvalidProductDetails) {
+      toast.error("All product quantities and prices must be valid.");
+      return;
+    }
+
+    if (!deliveryDate) {
+      toast.error("Delivery date is required.");
+      return;
+    }
+
+    if (!deliveryLocation) {
+      toast.error("Delivery location is required.");
+      return;
+    }
+
+    if (!shippingMethod) {
+      toast.error("Please select a shipping method.");
+      return;
+    }
+
     setOpenConfirmModal(true);
   };
 
@@ -237,8 +291,36 @@ const CreateSalesPage = () => {
                             <Input
                               min="0"
                               placeholder="Quantity"
-                              className="h-9"
+                              className={cn(
+                                "h-9",
+                                stockErrors[product.ID] && "border-red-500",
+                              )}
                               value={productDetails[index]?.quantity}
+                              onBlur={(e) => {
+                                const requestedQuantity = +e.target.value;
+                                const quantityAvailable = product.STOCK;
+
+                                const errorMessage =
+                                  requestedQuantity > quantityAvailable
+                                    ? `Only ${quantityAvailable} available`
+                                    : null;
+
+                                if (errorMessage) {
+                                  toast.error(
+                                    `Only ${quantityAvailable} in stock for ${product.NAME}`,
+                                  );
+                                }
+
+                                setStockErrors((prev) => {
+                                  const newErrors = { ...prev };
+                                  if (errorMessage) {
+                                    newErrors[product.ID] = errorMessage;
+                                  } else {
+                                    delete newErrors[product.ID];
+                                  }
+                                  return newErrors;
+                                });
+                              }}
                               onChange={(e) => {
                                 setProductDetails((prev) => {
                                   const newDetails = [...prev];
@@ -250,6 +332,11 @@ const CreateSalesPage = () => {
                                 });
                               }}
                             />
+                            {stockErrors[product.ID] && (
+                              <p className="mt-1 text-xs text-red-600">
+                                {stockErrors[product.ID]}
+                              </p>
+                            )}
                           </td>
 
                           <td className="p-3">
@@ -352,6 +439,14 @@ const CreateSalesPage = () => {
               onChange={(e) => setRemarks(e.target.value)}
             />
           </div>
+          <div>
+            <Label>Delivery Location</Label>
+            <Textarea
+              placeholder="Enter Location"
+              value={deliveryLocation}
+              onChange={(e) => setDeliveryLocation(e.target.value)}
+            />
+          </div>
         </div>
 
         <Button className="w-fit" onClick={handleCreate}>
@@ -377,6 +472,7 @@ const CreateSalesPage = () => {
           shippingMethod={shippingMethod}
           commission={commission}
           remarks={remarks}
+          deliveryLocation={deliveryLocation}
         />
       )}
     </div>

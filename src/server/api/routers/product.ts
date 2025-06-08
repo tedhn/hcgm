@@ -36,7 +36,6 @@ export const productRouter = createTRPCRouter({
         where: { CODE: input.code },
       });
 
-      console.log(existingProduct);
 
       if (existingProduct) {
         throw new TRPCError({

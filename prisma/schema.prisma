@@ -55,8 +55,8 @@ model Transaction {
   ID                Int                 @id @default(autoincrement())
   DOC_NUM           String              @default("")
   TRANSACTION_DATE  DateTime            @default(now()) @db.Timestamptz(6)
-  CUSTOMER_ID       Int                 @default(0)
-  ADMIN_ID          Int                 @default(0)
+  CUSTOMER_ID       Int                 
+  ADMIN_ID          Int                 
   TOTAL_PRICE       Float               @default(0)
   REF_DOC_NO        String?             @default("")
   DELIVERY_DATE     DateTime?
