@@ -42,15 +42,13 @@ export function LoginForm({
 
     const promise = mutateAsync({ email, password });
 
-    toast
-      .promise(promise, {
-        loading: "Logging in...",
-        success: "Login successful",
-        error: (err: TRPCError) => {
-          return err.message;
-        },
-      })
-      .catch((err) => console.log(err));
+    await toast.promise(promise, {
+      loading: "Logging in...",
+      success: "Login successful",
+      error: (err: TRPCError) => {
+        return err.message;
+      },
+    });
   };
 
   useEffect(() => {
