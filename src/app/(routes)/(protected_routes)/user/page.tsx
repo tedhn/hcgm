@@ -26,10 +26,8 @@ const UserPage = () => {
   const [isSearching, setIsSearching] = useState(false);
 
   const { data: userData, isLoading } = api.user.getAll.useQuery(
-    { userId: +user!.ID },
-    {
-      enabled: !!user,
-    },
+    { userId: user?.ID ?? -1 },
+    { enabled: !!user },
   );
   const {
     mutate: searchMutate,

@@ -68,7 +68,7 @@ const CreateSalesPage = () => {
   );
 
   const { data: customerData } = api.user.getAllCustomers.useQuery(
-    { userId: +user!.ID },
+    { userId: user?.ID ?? -1 },
     { enabled: !!user },
   );
   const { data: productData } = api.product.getAll.useQuery<Product[]>();

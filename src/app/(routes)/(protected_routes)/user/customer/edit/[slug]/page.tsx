@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Button } from "~/components/ui/button";
@@ -11,7 +11,7 @@ import BackButton from "~/app/_components/back-button";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
 import { useUserStore } from "~/lib/store/useUserStore";
-import { Customer } from "@prisma/client";
+import type { Customer } from "@prisma/client";
 
 const initialData = {
   CODE: "",
@@ -36,6 +36,7 @@ export default function EditCustomerPage() {
   const { user } = useUserStore();
   const customerId = params.slug ? Number(params.slug) : null;
 
+  const hasRedirected = useRef(false);
   const { data, isLoading } = api.user.getOne.useQuery(
     { id: customerId ?? -1, type: "customer" },
     { enabled: !!customerId },
@@ -70,6 +71,7 @@ export default function EditCustomerPage() {
   useEffect(() => {
     const formattedData = data as Customer;
     if (user?.ID !== formattedData?.ADMIN_ID) {
+      hasRedirected.current = true;
       toast.error("You are not authorized to edit this customer.");
       router.push("/user");
     }
