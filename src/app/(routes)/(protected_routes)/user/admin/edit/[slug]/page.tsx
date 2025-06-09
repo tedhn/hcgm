@@ -1,3 +1,4 @@
+"use client";
 import type { Admin } from "@prisma/client";
 import { useRouter, useParams } from "next/navigation";
 import React, { useEffect } from "react";
