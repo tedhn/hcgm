@@ -150,9 +150,6 @@ const SalesDetailsDialog: React.FC<SalesDetailsDialogProps> = ({
                     : "-"}
                 </div>
                 <div>
-                  <strong>Delivery Location:</strong> {data!.LOCATION ?? "-"}
-                </div>
-                <div>
                   <strong>Shipping Method:</strong>{" "}
                   {data!.SHIPPING_METHOD ?? "-"}
                 </div>
@@ -162,6 +159,9 @@ const SalesDetailsDialog: React.FC<SalesDetailsDialogProps> = ({
                 </div>
                 <div>
                   <strong>Remarks:</strong> {data!.REMARK ?? "-"}
+                </div>
+                <div>
+                  <strong>Delivery Location:</strong> {data!.LOCATION ?? "-"}
                 </div>
               </CardContent>
             </Card>

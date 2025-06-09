@@ -26,7 +26,7 @@ export const customerBaseSchema = z.object({
   ADDRESS: z.string(),
   CREDIT_TERM: z.string(),
   CREDIT_LIMIT: z.number(),
-  ADMIN_ID : z.number()
+  ADMIN_ID: z.number(),
 });
 
 export const createCustomerSchema = customerBaseSchema;
@@ -71,8 +71,8 @@ export const userRouter = createTRPCRouter({
     });
 
     //@ts-expeect-error any
-    return { safeAdmin, customers } as {
-      safeAdmin: UserType[];
+    return { admins: safeAdmin, customers } as {
+      admins: UserType[];
       customers: CustomerType[];
     };
   }),
@@ -335,4 +335,34 @@ export const userRouter = createTRPCRouter({
 
     return user;
   }),
+
+  search: publicProcedure
+    .input(z.object({ query: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const searchAdminResults = await ctx.db.admin.findMany({
+        where: {
+          OR: [
+            { NAME: { contains: input.query, mode: "insensitive" } },
+            { EMAIL: { contains: input.query, mode: "insensitive" } },
+            { CODE: { contains: input.query, mode: "insensitive" } },
+          ],
+        },
+      });
+
+      const searchCustomerResults = await ctx.db.customer.findMany({
+        where: {
+          OR: [
+            { NAME: { contains: input.query, mode: "insensitive" } },
+            { EMAIL: { contains: input.query, mode: "insensitive" } },
+            { PIC_NAME: { contains: input.query, mode: "insensitive" } },
+            { CODE: { contains: input.query, mode: "insensitive" } },
+          ],
+        },
+      });
+
+      return {
+        admins: searchAdminResults,
+        customers: searchCustomerResults,
+      };
+    }),
 });

@@ -3,31 +3,14 @@ import { createTRPCRouter, publicProcedure } from "../trpc";
 
 export const transactionRouter = createTRPCRouter({
   getAll: publicProcedure.query(async ({ ctx }) => {
-    const transactions = await ctx.db.transaction.findMany();
-    const admins = await ctx.db.admin.findMany();
-    const customers = await ctx.db.customer.findMany();
-    const transactionDetails = await ctx.db.transactionDetail.findMany();
-
-    const sales = transactions.map((transaction) => {
-      const admin = admins.find((admin) => admin.ID === transaction.ADMIN_ID);
-      const customer = customers.find(
-        (customer) => customer.ID === transaction.CUSTOMER_ID,
-      );
-      const details = transactionDetails.find(
-        (detail) => detail.TRANSACTION_ID === transaction.ID,
-      );
-
-      return {
-        ...transaction,
-        ADMIN: admin,
-        CUSTOMER: customer,
-        DETAILS: details,
-      };
+    const sales = await ctx.db.transaction.findMany({
+      include: {
+        ADMIN: true,
+        CUSTOMER: true,
+        TransactionDetail: true,
+      },
     });
 
-    // const customers = await ctx.db.customer.findMany();
-
-    //@ts-expeect-error any
     return sales;
   }),
 
@@ -274,5 +257,29 @@ export const transactionRouter = createTRPCRouter({
         message: `Transaction with ID ${transactionId} deleted successfully.`,
         deletedTransaction,
       };
+    }),
+
+  search: publicProcedure
+    .input(z.object({ query: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const searchResults = await ctx.db.transaction.findMany({
+        where: {
+          OR: [
+            { DOC_NUM: { contains: input.query, mode: "insensitive" } },
+            {
+              CUSTOMER: {
+                NAME: { contains: input.query, mode: "insensitive" },
+              },
+            },
+          ],
+        },
+        include: {
+          ADMIN: true,
+          CUSTOMER: true,
+          TransactionDetail: true,
+        },
+      });
+
+      return searchResults;
     }),
 });

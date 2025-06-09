@@ -53,12 +53,13 @@ export type TransactionType = {
   COMISSION?: number | null;
   REMARK?: string | null;
   STATUS: string;
+  LOCATION?: string | null;
 };
 
 export interface SalesType extends TransactionType {
   CUSTOMER: CustomerType | undefined;
   ADMIN: UserType | undefined;
-  DETAILS: TransactionDetailType | undefined;
+  TransactionDetail: TransactionDetailType[] | undefined;
 }
 
 export type TransactionDetailType = {

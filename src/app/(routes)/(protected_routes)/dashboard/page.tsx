@@ -16,6 +16,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { calculateTotal } from "~/lib/utils";
+import SearchBar from "~/app/_components/search-bar";
 
 export type ForecastRow = {
   id: number;
@@ -34,7 +35,6 @@ function formatNumberWithCommas(value: number | string) {
   return num.toLocaleString();
 }
 
-
 const DashboardPage = () => {
   const updateMutation = api.dashboard.updateForecast.useMutation();
 
@@ -47,6 +47,10 @@ const DashboardPage = () => {
     mt: Omit<ForecastRow, "type">[];
     costing: Omit<ForecastRow, "type">[];
   }>({ mt: [], costing: [] });
+
+  useEffect(() => {
+    setLocalData(forecast ?? { mt: [], costing: [] });
+  }, [forecast]);
 
   const handleUpdateData = (data: ForecastRow, value: number, key: string) => {
     if (Number.isNaN(+value)) {
@@ -123,13 +127,10 @@ const DashboardPage = () => {
     },
   ];
 
-  useEffect(() => {
-    setLocalData(forecast ?? { mt: [], costing: [] });
-  }, [forecast]);
-
   return (
     <div className="w-full px-0 py-4 lg:px-4">
       <h1 className="mb-6 text-3xl">Forecast</h1>
+
 
       <Tabs defaultValue="weight" className="w-full">
         <TabsList className="mb-4">

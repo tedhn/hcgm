@@ -64,7 +64,7 @@ model Transaction {
   COMISSION         Float?              @default(0)
   REMARK            String?             @default("")
   STATUS            String              @default("")
-  LOCATION          String?
+  LOCATION          String
   ADMIN             Admin               @relation(fields: [ADMIN_ID], references: [ID])
   CUSTOMER          Customer            @relation(fields: [CUSTOMER_ID], references: [ID])
   TransactionDetail TransactionDetail[]

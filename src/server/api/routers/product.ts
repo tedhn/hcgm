@@ -27,7 +27,9 @@ export const productRouter = createTRPCRouter({
         category: z.string().min(1, "Category is required"),
         base_uom: z.string().min(1, "Base UOM is required"),
         stock: z.number().min(0, "Stock must be a non-negative number"),
-        unit_price: z.number().min(0, "Unit Price must be a non-negative number"),
+        unit_price: z
+          .number()
+          .min(0, "Unit Price must be a non-negative number"),
       }),
     )
 
@@ -35,7 +37,6 @@ export const productRouter = createTRPCRouter({
       const existingProduct = await ctx.db.product.findFirst({
         where: { CODE: input.code },
       });
-
 
       if (existingProduct) {
         throw new TRPCError({
@@ -146,5 +147,19 @@ export const productRouter = createTRPCRouter({
         success: true,
         message: `Product ${input.id} deleted successfully.`,
       };
+    }),
+
+  search: publicProcedure
+    .input(z.object({ query: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const products = await ctx.db.product.findMany({
+        where: {
+          OR: [
+            { NAME: { contains: input.query, mode: "insensitive" } },
+            { CODE: { contains: input.query, mode: "insensitive" } },
+          ],
+        },
+      });
+      return products;
     }),
 });

@@ -1,9 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { DataTable } from "~/app/_components/data-table";
 import { api } from "~/trpc/react";
 
@@ -14,29 +12,24 @@ import type { UserType, CustomerType } from "~/lib/types";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "~/components/ui/tabs";
 import { type REGION, REGION_LABELS } from "~/app/const";
 import toast from "react-hot-toast";
+import SearchBar from "~/app/_components/search-bar";
 
 const UserPage = () => {
   const current_path = usePathname();
   const router = useRouter();
+  const utils = api.useUtils();
 
   const [currentTab, setCurrentTab] = useState<string>("admin");
-  const [adminData, setAdminData] = useState<UserType[]>([]);
-  const [customerData, setCustomerData] = useState<CustomerType[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   const { data: userData, isLoading } = api.user.getAll.useQuery();
+  const {
+    mutate: searchMutate,
+    data: searchData,
+    isPending,
+  } = api.user.search.useMutation();
 
   const deleteUserMutation = api.user.deleteUser.useMutation();
-
-  useEffect(() => {
-    try {
-      if (userData?.safeAdmin && userData.customers) {
-        setAdminData(userData.safeAdmin);
-        setCustomerData(userData.customers);
-      }
-    } catch (e) {
-      console.log(e);
-    }
-  }, [userData]);
 
   const handleDelete = async (id: number, type: string) => {
     const promise = deleteUserMutation.mutateAsync({ id: id, type });
@@ -47,20 +40,7 @@ const UserPage = () => {
       error: "Error deleting user",
     });
 
-    switch (type) {
-      case "admin":
-        const newAdminTypeData = adminData.filter((item) => item.ID !== id);
-        setAdminData(newAdminTypeData);
-
-        break;
-      case "customer":
-        const newCustomerTypeData = customerData.filter(
-          (item) => item.ID !== id,
-        );
-        setCustomerData(newCustomerTypeData);
-
-        break;
-    }
+    void utils.user.getAll.invalidate();
   };
 
   const adminColumns: ColumnDef<UserType>[] = [
@@ -252,6 +232,23 @@ const UserPage = () => {
     },
   ];
 
+  const handleSearch = (value: string) => {
+    if (value === "") {
+      setIsSearching(false);
+    } else {
+      setIsSearching(true);
+    }
+
+    searchMutate({ query: value });
+  };
+
+  const displayedAdminData = isSearching
+    ? (searchData?.admins ?? [])
+    : (userData?.admins ?? []);
+  const displayedCustomerData = isSearching
+    ? (searchData?.customers ?? [])
+    : (userData?.customers ?? []);
+
   return (
     <>
       <div className="w-full px-0 py-4 lg:px-4">
@@ -266,6 +263,8 @@ const UserPage = () => {
           </Button>
         </div>
 
+        <SearchBar onSearch={handleSearch} isLoading={isPending} />
+
         <Tabs
           value={currentTab}
           onValueChange={setCurrentTab}
@@ -279,16 +278,16 @@ const UserPage = () => {
           <TabsContent value="admin">
             <DataTable
               columns={adminColumns}
-              data={adminData}
-              isLoading={isLoading}
+              data={displayedAdminData}
+              isLoading={isLoading || isPending}
             />
           </TabsContent>
 
           <TabsContent value="customer">
             <DataTable
               columns={customerColumns}
-              data={customerData}
-              isLoading={isLoading}
+              data={displayedCustomerData}
+              isLoading={isLoading || isPending}
             />
           </TabsContent>
         </Tabs>

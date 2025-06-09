@@ -1,49 +1,37 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { DataTable } from "~/app/_components/data-table";
 import { api } from "~/trpc/react";
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
 import { Button } from "~/components/ui/button";
-import { MoreHorizontal, Pencil, Trash } from "lucide-react";
+import { Pencil, Trash } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import type { ProductType } from "~/lib/types";
+import SearchBar from "~/app/_components/search-bar";
 
 const ProductsPage = () => {
   const current_path = usePathname();
   const router = useRouter();
-  const [data, setData] = useState<ProductType[]>([]);
-  // const [customerData, setCustomerData] = useState<Customer[]>([]);
+  const utils = api.useUtils();
+
+  const [isSearching, setIsSearching] = useState(false);
 
   const { data: productData, isLoading } = api.product.getAll.useQuery();
 
   const deleteMutation = api.product.delete.useMutation();
-
-  useEffect(() => {
-    try {
-      if (productData) {
-        setData(productData);
-      }
-    } catch (e) {
-      console.log(e);
-    }
-  }, [productData]);
+  const {
+    mutate: searchMutate,
+    isPending,
+    data: searchData,
+  } = api.product.search.useMutation();
 
   const handleDelete = (id: number) => {
     console.log("delete", id);
 
     deleteMutation.mutate({ id });
-
-    const newProductTypeData = data.filter((item) => item.ID !== id);
-
-    setData(newProductTypeData);
+    void utils.product.getAll.invalidate();
   };
 
   const productColumns: ColumnDef<ProductType>[] = [
@@ -146,6 +134,18 @@ const ProductsPage = () => {
     },
   ];
 
+  const handleSearch = (value: string) => {
+    if (value === "") {
+      setIsSearching(false);
+    } else {
+      setIsSearching(true);
+    }
+
+    searchMutate({ query: value });
+  };
+
+  const displayedData = isSearching ? (searchData ?? []) : (productData ?? []);
+
   return (
     <>
       <div className="w-full px-0 py-4 lg:px-4">
@@ -160,11 +160,13 @@ const ProductsPage = () => {
           </Button>
         </div>
 
+        <SearchBar onSearch={handleSearch} isLoading={isPending} />
+
         <section className="pb-8">
           <DataTable
             columns={productColumns}
-            data={data}
-            isLoading={isLoading}
+            data={displayedData}
+            isLoading={isLoading || isPending}
           />
         </section>
 
