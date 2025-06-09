@@ -11,6 +11,7 @@ import BackButton from "~/app/_components/back-button";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
 import { useUserStore } from "~/lib/store/useUserStore";
+import { Customer } from "@prisma/client";
 
 const initialData = {
   CODE: "",
@@ -32,9 +33,8 @@ export default function EditCustomerPage() {
   const isMobile = useIsMobile();
   const params = useParams();
   const router = useRouter();
-const {user } = useUserStore()
+  const { user } = useUserStore();
   const customerId = params.slug ? Number(params.slug) : null;
-
 
   const { data, isLoading } = api.user.getOne.useQuery(
     { id: customerId ?? -1, type: "customer" },
@@ -67,6 +67,14 @@ const {user } = useUserStore()
     }
   }, [data, isLoading]);
 
+  useEffect(() => {
+    const formattedData = data as Customer;
+    if (user?.ID !== formattedData?.ADMIN_ID) {
+      toast.error("You are not authorized to edit this customer.");
+      router.push("/user");
+    }
+  }, [data, router, user]);
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
@@ -83,7 +91,7 @@ const {user } = useUserStore()
 
     editCustomer.mutate({
       ID: customerId,
-      ADMIN_ID : user!.ID,
+      ADMIN_ID: user!.ID,
       ...formData,
     });
   };

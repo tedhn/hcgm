@@ -2,6 +2,7 @@
 import type { Admin } from "@prisma/client";
 import { useRouter, useParams } from "next/navigation";
 import React, { useEffect } from "react";
+import toast from "react-hot-toast";
 import BackButton from "~/app/_components/back-button";
 import { Roles } from "~/app/const";
 import { Button } from "~/components/ui/button";
@@ -15,11 +16,14 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { useIsMobile } from "~/hooks/useMobile";
+import { useUserStore } from "~/lib/store/useUserStore";
+import { isAdmin } from "~/lib/utils";
 import { api } from "~/trpc/react";
 
 const EditUserPage = () => {
   const router = useRouter();
   const params = useParams();
+  const { user } = useUserStore();
   const isMobile = useIsMobile();
 
   const [code, setCode] = React.useState("");
@@ -40,6 +44,13 @@ const EditUserPage = () => {
     isPending,
     data: editData,
   } = api.user.editAdmin.useMutation();
+
+  useEffect(() => {
+    if (!isAdmin(user?.ROLE)) {
+      toast.error("You are not authorized to edit this.");
+      router.push("/user");
+    }
+  }, [router, user]);
 
   useEffect(() => {
     if (data && !isLoading) {

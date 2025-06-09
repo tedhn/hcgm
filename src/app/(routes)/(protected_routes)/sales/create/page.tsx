@@ -35,11 +35,12 @@ import {
 } from "~/components/ui/select";
 import { Textarea } from "~/components/ui/textarea";
 import toast from "react-hot-toast";
-import { de } from "date-fns/locale";
+import { useUserStore } from "~/lib/store/useUserStore";
 
 const CreateSalesPage = () => {
   const isMobile = useIsMobile();
 
+  const { user } = useUserStore();
   const [openConfirmModal, setOpenConfirmModal] = React.useState(false);
   const [customerId, setCustomerId] = React.useState<string>("");
   const [openCustomerComboBox, setOpenCustomerComboBox] = React.useState(false);
@@ -66,7 +67,10 @@ const CreateSalesPage = () => {
     {},
   );
 
-  const { data: customerData } = api.user.getAllCustomers.useQuery();
+  const { data: customerData } = api.user.getAllCustomers.useQuery(
+    { userId: +user!.ID },
+    { enabled: !!user },
+  );
   const { data: productData } = api.product.getAll.useQuery<Product[]>();
 
   const handleCreate = async () => {
@@ -425,7 +429,7 @@ const CreateSalesPage = () => {
           <div>
             <Label>Commission</Label>
             <Input
-              placeholder="Enter commission %"
+              placeholder="Enter commission (RM)"
               value={commission}
               onChange={(e) => setCommission(e.target.value)}
             />

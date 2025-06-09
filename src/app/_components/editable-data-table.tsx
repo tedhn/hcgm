@@ -21,12 +21,14 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import type { ForecastRow } from "../(routes)/(protected_routes)/dashboard/page";
+import { useUserStore } from "~/lib/store/useUserStore";
+import { isAdmin } from "~/lib/utils";
+import { Input } from "~/components/ui/input";
 // Add a new prop to identify which key (mt or costing) this table modifies
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   isLoading: boolean;
-  onRowDoubleClick?: (row: TData) => void;
   onDataChange: (newData: TData, value: number, key: string) => void;
   setLocalData: React.Dispatch<
     React.SetStateAction<{
@@ -39,10 +41,10 @@ interface DataTableProps<TData, TValue> {
 export function EditableDataTable<TData extends object, TValue>({
   columns,
   data,
-  onRowDoubleClick,
   isLoading,
   onDataChange,
 }: DataTableProps<TData, TValue>) {
+  const { user } = useUserStore();
   const [editingCell, setEditingCell] = useState<{
     rowIndex: number;
     columnId: string;
@@ -100,7 +102,6 @@ export function EditableDataTable<TData extends object, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  onDoubleClick={() => onRowDoubleClick?.(row.original)}
                 >
                   {row.getVisibleCells().map((cell) => {
                     const isEditing =
@@ -111,12 +112,17 @@ export function EditableDataTable<TData extends object, TValue>({
                     return (
                       <TableCell
                         key={cell.id}
-                        onDoubleClick={() =>
-                          setEditingCell({ rowIndex, columnId: cell.column.id })
-                        }
+                        onDoubleClick={() => {
+                          if (isAdmin(user?.ROLE)) {
+                            setEditingCell({
+                              rowIndex,
+                              columnId: cell.column.id,
+                            });
+                          }
+                        }}
                       >
                         {isEditing ? (
-                          <input
+                          <Input
                             type="text"
                             className="w-full rounded border bg-white p-1"
                             autoFocus

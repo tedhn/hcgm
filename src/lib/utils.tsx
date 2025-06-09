@@ -17,8 +17,12 @@ export function middleware(request: NextRequest) {
   return NextResponse.rewrite(url);
 }
 
-export function isAdmin(role: string) {
-  return role === "admin";
+export function isAdmin(role: string | undefined) {
+  if (!role) {
+    return false;
+  }
+
+  return role.toLowerCase() !== "salesperson";
 }
 
 export const calculateTotal = (arr: ForecastRow[] | undefined) => {

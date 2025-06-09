@@ -36,6 +36,7 @@ import { useIsMobile } from "~/hooks/useMobile";
 import BackButton from "~/app/_components/back-button";
 import toast from "react-hot-toast";
 import { Textarea } from "~/components/ui/textarea";
+import { useUserStore } from "~/lib/store/useUserStore";
 
 const EditSalesPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -44,6 +45,7 @@ const EditSalesPage = () => {
   const router = useRouter();
   const isMobile = useIsMobile();
 
+  const { user } = useUserStore();
   const { data: salesData, isLoading } = api.transactions.getOne.useQuery({
     id: +id,
   });
@@ -70,7 +72,10 @@ const EditSalesPage = () => {
   const [status, setStatus] = React.useState("");
   const [deliveryLocation, setDeliveryLocation] = React.useState("");
 
-  const { data: customerData } = api.user.getAllCustomers.useQuery();
+  const { data: customerData } = api.user.getAllCustomers.useQuery(
+    { userId: +user!.ID },
+    { enabled: !!user },
+  );
   const { data: productData } = api.product.getAll.useQuery<Product[]>();
 
   const { mutate: editSales, isPending } = api.transactions.edit.useMutation({
@@ -80,6 +85,13 @@ const EditSalesPage = () => {
       router.push("/sales");
     },
   });
+
+  useEffect(() => {
+    if (user?.ID !== salesData?.ADMIN_ID) {
+      toast.error("You are not authorized to edit this.");
+      router.push("/sales");
+    }
+  }, [salesData, router, user]);
 
   // Prefill data when salesData arrives
   useEffect(() => {
@@ -137,7 +149,6 @@ const EditSalesPage = () => {
       status: status,
       deliveryLocation,
     };
-
 
     editSales(salesData);
   };
@@ -432,7 +443,7 @@ const EditSalesPage = () => {
           <div>
             <Label>Commission</Label>
             <Input
-              placeholder="Enter commission %"
+              placeholder="Enter commission (RM)"
               value={commission}
               onChange={(e) => setCommission(e.target.value)}
             />

@@ -13,16 +13,24 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "~/components/ui/tabs";
 import { type REGION, REGION_LABELS } from "~/app/const";
 import toast from "react-hot-toast";
 import SearchBar from "~/app/_components/search-bar";
+import { isAdmin } from "~/lib/utils";
+import { useUserStore } from "~/lib/store/useUserStore";
 
 const UserPage = () => {
   const current_path = usePathname();
   const router = useRouter();
   const utils = api.useUtils();
 
+  const { user } = useUserStore();
   const [currentTab, setCurrentTab] = useState<string>("admin");
   const [isSearching, setIsSearching] = useState(false);
 
-  const { data: userData, isLoading } = api.user.getAll.useQuery();
+  const { data: userData, isLoading } = api.user.getAll.useQuery(
+    { userId: +user!.ID },
+    {
+      enabled: !!user,
+    },
+  );
   const {
     mutate: searchMutate,
     data: searchData,
@@ -110,13 +118,6 @@ const UserPage = () => {
         return <div>{outputText}</div>;
       },
     },
-    {
-      accessorKey: "created_at",
-      header: "Created At",
-      cell: ({ row }) => {
-        return new Date(row.original.CREATED_AT).toLocaleDateString();
-      },
-    },
 
     {
       id: "actions",
@@ -124,22 +125,26 @@ const UserPage = () => {
       cell: ({ row }) => {
         return (
           <div className="flex items-center justify-center">
-            <Button
-              variant="ghost"
-              className="text-blue-500 focus:bg-blue-500/10 focus:text-blue-500"
-              onClick={() =>
-                router.push(current_path + `/admin/edit/${row.original.ID}`)
-              }
-            >
-              <Pencil className="h-2 w-2" />
-            </Button>
-            <Button
-              variant="ghost"
-              className="text-red-500 focus:bg-red-500/10 focus:text-red-500"
-              onClick={() => handleDelete(row.original.ID, "admin")}
-            >
-              <Trash className="h-2 w-2" />
-            </Button>
+            {isAdmin(user?.ROLE) && (
+              <>
+                <Button
+                  variant="ghost"
+                  className="text-blue-500 focus:bg-blue-500/10 focus:text-blue-500"
+                  onClick={() =>
+                    router.push(current_path + `/admin/edit/${row.original.ID}`)
+                  }
+                >
+                  <Pencil className="h-2 w-2" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="text-red-500 focus:bg-red-500/10 focus:text-red-500"
+                  onClick={() => handleDelete(row.original.ID, "admin")}
+                >
+                  <Trash className="h-2 w-2" />
+                </Button>
+              </>
+            )}
           </div>
         );
       },
@@ -219,13 +224,15 @@ const UserPage = () => {
             >
               <Pencil className="h-2 w-2" />
             </Button>
-            <Button
-              variant="ghost"
-              className="text-red-500 focus:bg-red-500/10 focus:text-red-500"
-              onClick={() => handleDelete(row.original.ID, "customer")}
-            >
-              <Trash className="h-2 w-2" />
-            </Button>
+            {isAdmin(user?.ROLE) && (
+              <Button
+                variant="ghost"
+                className="text-red-500 focus:bg-red-500/10 focus:text-red-500"
+                onClick={() => handleDelete(row.original.ID, "admin")}
+              >
+                <Trash className="h-2 w-2" />
+              </Button>
+            )}
           </div>
         );
       },
@@ -255,12 +262,23 @@ const UserPage = () => {
         <div className="flex items-center justify-between">
           <h1 className="mb-6 text-3xl">Users</h1>
 
-          <Button
-            className="mb-4"
-            onClick={() => router.push(current_path + `/${currentTab}/create`)}
-          >
-            Create {currentTab === "admin" ? "Admin" : "Customer"}
-          </Button>
+          {isAdmin(user?.ROLE) ? (
+            <Button
+              className="mb-4"
+              onClick={() =>
+                router.push(current_path + `/${currentTab}/create`)
+              }
+            >
+              Create {currentTab === "admin" ? "Admin" : "Customer"}
+            </Button>
+          ) : (
+            <Button
+              className="mb-4"
+              onClick={() => router.push(current_path + `/customer/create`)}
+            >
+              Create Customer
+            </Button>
+          )}
         </div>
 
         <SearchBar onSearch={handleSearch} isLoading={isPending} />

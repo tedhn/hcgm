@@ -16,7 +16,6 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { calculateTotal } from "~/lib/utils";
-import SearchBar from "~/app/_components/search-bar";
 
 export type ForecastRow = {
   id: number;
@@ -100,7 +99,7 @@ const DashboardPage = () => {
             {val == null
               ? "-"
               : isCosting
-                ? `RM ${formatNumberWithCommas(val)}`
+                ? `RM ${formatNumberWithCommas(val / 1000)}k`
                 : formatNumberWithCommas(val)}
           </div>
         );
@@ -119,7 +118,7 @@ const DashboardPage = () => {
         return (
           <div>
             {type === "COSTING"
-              ? `RM ${formatNumberWithCommas(total)}`
+              ? `RM ${formatNumberWithCommas(total / 1000)}k`
               : formatNumberWithCommas(total)}
           </div>
         );
@@ -131,7 +130,6 @@ const DashboardPage = () => {
     <div className="w-full px-0 py-4 lg:px-4">
       <h1 className="mb-6 text-3xl">Forecast</h1>
 
-
       <Tabs defaultValue="weight" className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="weight">Weights</TabsTrigger>
@@ -139,7 +137,6 @@ const DashboardPage = () => {
         </TabsList>
 
         <TabsContent value="weight">
-          {" "}
           <section className="space-y-4 rounded-md p-4">
             <h2
               className="mb-4 text-xl font-semibold"

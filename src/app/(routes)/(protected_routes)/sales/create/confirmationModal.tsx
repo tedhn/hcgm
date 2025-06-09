@@ -170,7 +170,7 @@ const ConfirmSalesModal: React.FC<ConfirmSalesModalProps> = ({
             <strong>Shipping Method:</strong> {shippingMethod || "-"}
           </div>
           <div>
-            <strong>Commission:</strong> {commission || "-"}%
+            <strong>Commission:</strong> {`RM${commission}` || "-"}
           </div>
           <div>
             <strong>Remarks:</strong> {remarks || "-"}

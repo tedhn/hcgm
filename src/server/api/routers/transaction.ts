@@ -2,17 +2,26 @@ import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 
 export const transactionRouter = createTRPCRouter({
-  getAll: publicProcedure.query(async ({ ctx }) => {
-    const sales = await ctx.db.transaction.findMany({
-      include: {
-        ADMIN: true,
-        CUSTOMER: true,
-        TransactionDetail: true,
-      },
-    });
+  getAll: publicProcedure
+    .input(z.object({ userId: z.number() }))
+    .query(async ({ input, ctx }) => {
+      const admin = await ctx.db.admin.findUnique({
+        where: { ID: input.userId },
+      });
 
-    return sales;
-  }),
+      const isSalesperson = admin?.ROLE.toLowerCase() === "salesperson";
+
+      const sales = await ctx.db.transaction.findMany({
+        where: isSalesperson ? { ADMIN_ID: input.userId } : undefined,
+        include: {
+          ADMIN: true,
+          CUSTOMER: true,
+          TransactionDetail: true,
+        },
+      });
+
+      return sales;
+    }),
 
   getOne: publicProcedure
     .input(z.object({ id: z.number() }))

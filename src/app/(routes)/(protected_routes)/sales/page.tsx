@@ -11,7 +11,7 @@ import { usePathname, useRouter } from "next/navigation";
 import type { SalesType } from "~/lib/types";
 import SalesDetailsDialog from "./viewModal";
 import toast from "react-hot-toast";
-import { renderStatus } from "~/lib/utils";
+import { isAdmin, renderStatus } from "~/lib/utils";
 import { useUserStore } from "~/lib/store/useUserStore";
 import SearchBar from "~/app/_components/search-bar";
 
@@ -25,7 +25,12 @@ const ProductsPage = () => {
   const [openViewModal, setOpenViewModal] = useState(false);
 
   const [isSearching, setIsSearching] = useState(false);
-  const { data: apiData, isLoading } = api.transactions.getAll.useQuery();
+  const { data: apiData, isLoading } = api.transactions.getAll.useQuery(
+    {
+      userId: user?.ID ?? 0,
+    },
+    { enabled: !!user },
+  );
   const { mutate: deleteTransaction } = api.transactions.delete.useMutation({
     onSuccess: () => {
       void utils.transactions.getAll.invalidate();
@@ -103,7 +108,7 @@ const ProductsPage = () => {
       accessorKey: "TOTAL_PRICE",
       header: "Total Price",
       size: 130,
-      cell: ({ row }) => `RM ${row.original.TOTAL_PRICE.toFixed(2)}`,
+      cell: ({ row }) => `RM ${row.original.TOTAL_PRICE}`,
     },
     {
       accessorKey: "DELIVERY_DATE",
@@ -134,22 +139,24 @@ const ProductsPage = () => {
           >
             <Pencil className="h-4 w-4" />
           </Button>
-          <Button
-            variant="ghost"
-            className="text-red-500 focus:bg-red-500/10 focus:text-red-500"
-            onClick={() => handleDelete(row.original.ID)}
-          >
-            <Trash className="h-4 w-4" />
-          </Button>
+
+          {isAdmin(user?.ROLE) && (
+            <Button
+              variant="ghost"
+              className="text-red-500 focus:bg-red-500/10 focus:text-red-500"
+              onClick={() => handleDelete(row.original.ID)}
+            >
+              <Trash className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       ),
     },
   ];
 
-  const displayColumn =
-    user?.ROLE.toLowerCase() === "salesperson"
-      ? transactionsColumns.filter((item) => item.header !== "Admin")
-      : transactionsColumns;
+  const displayColumn = isAdmin(user?.ROLE)
+    ? transactionsColumns
+    : transactionsColumns.filter((item) => item.header !== "Admin");
 
   const displayData = isSearching ? (searchData ?? []) : (apiData ?? []);
 

@@ -61,26 +61,33 @@ export const userRouter = createTRPCRouter({
       // return { };
     }),
 
-  getAll: publicProcedure.query(async ({ ctx }) => {
-    const admin = await ctx.db.admin.findMany();
-    const customers = await ctx.db.customer.findMany();
+  getAll: publicProcedure
+    .input(z.object({ userId: z.number() }))
+    .query(async ({ input, ctx }) => {
+      const admin = await ctx.db.admin.findMany();
+      const customers = await ctx.db.customer.findMany({
+        where: { ADMIN_ID: input.userId },
+      });
 
-    const safeAdmin = admin.map((a: Admin) => {
-      const { PASSWORD, ...safeAdmin } = a;
-      return safeAdmin;
-    });
+      const safeAdmin = admin.map((a: Admin) => {
+        const { PASSWORD, ...safeAdmin } = a;
+        return safeAdmin;
+      });
 
-    //@ts-expeect-error any
-    return { admins: safeAdmin, customers } as {
-      admins: UserType[];
-      customers: CustomerType[];
-    };
-  }),
+      return { admins: safeAdmin, customers } as {
+        admins: UserType[];
+        customers: CustomerType[];
+      };
+    }),
 
-  getAllCustomers: publicProcedure.query(async ({ ctx }) => {
-    const customers = await ctx.db.customer.findMany();
-    return customers;
-  }),
+  getAllCustomers: publicProcedure
+    .input(z.object({ userId: z.number() }))
+    .query(async ({ input, ctx }) => {
+      const customers = await ctx.db.customer.findMany({
+        where: { ADMIN_ID: input.userId },
+      });
+      return customers;
+    }),
 
   getOne: publicProcedure
     .input(z.object({ id: z.number(), type: z.string() }))
