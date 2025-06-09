@@ -10,6 +10,7 @@ import { useIsMobile } from "~/hooks/useMobile";
 import BackButton from "~/app/_components/back-button";
 import { api } from "~/trpc/react";
 import { useRouter } from "next/navigation";
+import { useUserStore } from "~/lib/store/useUserStore";
 
 const initialData = {
   CODE: "",
@@ -31,6 +32,7 @@ export default function CreateCustomerPage() {
   const isMobile = useIsMobile();
   const router = useRouter();
   const util = api.useUtils();
+  const { user } = useUserStore();
   const [formData, setFormData] = useState(initialData);
 
   const createCustomerMutation = api.user.createCustomer.useMutation({
@@ -54,9 +56,10 @@ export default function CreateCustomerPage() {
     e.preventDefault();
 
     try {
-      // TODO: Replace with your API call or tRPC mutation
-      console.log("Creating customer:", formData);
-      const promsie = createCustomerMutation.mutateAsync(formData);
+      const promsie = createCustomerMutation.mutateAsync({
+        ...formData,
+        ADMIN_ID: user!.ID,
+      });
 
       await toast.promise(promsie, {
         loading: "Creating customer...",

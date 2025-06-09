@@ -26,6 +26,7 @@ export const customerBaseSchema = z.object({
   ADDRESS: z.string(),
   CREDIT_TERM: z.string(),
   CREDIT_LIMIT: z.number(),
+  ADMIN_ID : z.number()
 });
 
 export const createCustomerSchema = customerBaseSchema;

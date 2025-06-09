@@ -9,22 +9,9 @@ import { Button } from "~/components/ui/button";
 import { Pencil, Trash } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import type { SalesType } from "~/lib/types";
-import { Badge } from "~/components/ui/badge";
 import SalesDetailsDialog from "./viewModal";
 import toast from "react-hot-toast";
-
-export const renderStatus = (status: string) => {
-  switch (status.toLowerCase()) {
-    case "pending":
-      return <Badge variant={"pending"}>Pending</Badge>;
-    case "approved":
-      return <Badge variant={"done"}>Approved</Badge>;
-    case "delivered":
-      return <Badge variant={"success"}>Delivered</Badge>;
-    case "cancelled":
-      return <Badge variant={"destructive"}>Cancelled</Badge>;
-  }
-};
+import { renderStatus } from "~/lib/utils";
 
 const ProductsPage = () => {
   const current_path = usePathname();

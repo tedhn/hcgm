@@ -35,6 +35,7 @@ import { Calendar } from "~/components/ui/calendar";
 import { useIsMobile } from "~/hooks/useMobile";
 import BackButton from "~/app/_components/back-button";
 import toast from "react-hot-toast";
+import { Textarea } from "~/components/ui/textarea";
 
 const EditSalesPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -67,6 +68,7 @@ const EditSalesPage = () => {
   const [commission, setCommission] = React.useState("");
   const [remarks, setRemarks] = React.useState("");
   const [status, setStatus] = React.useState("");
+  const [deliveryLocation, setDeliveryLocation] = React.useState("");
 
   const { data: customerData } = api.user.getAllCustomers.useQuery();
   const { data: productData } = api.product.getAll.useQuery<Product[]>();
@@ -82,7 +84,6 @@ const EditSalesPage = () => {
   // Prefill data when salesData arrives
   useEffect(() => {
     if (salesData && productData) {
-      console.log(salesData.DELIVERY_DATE);
       setDocumentNo(salesData.DOC_NUM);
       setReferenceDocNo(salesData.REF_DOC_NO ?? "");
       setCustomerId(salesData.CUSTOMER_ID.toString());
@@ -105,6 +106,7 @@ const EditSalesPage = () => {
           (product) => productData.find((p) => p.ID === product.PRODUCT_ID)!,
         ),
       );
+      setDeliveryLocation(salesData.LOCATION ?? "");
     }
   }, [salesData, productData]);
 
@@ -133,9 +135,9 @@ const EditSalesPage = () => {
         price: Number(p.price),
       })),
       status: status,
+      deliveryLocation,
     };
 
-    console.log(salesData);
 
     editSales(salesData);
   };
@@ -442,6 +444,14 @@ const EditSalesPage = () => {
               placeholder="Enter remarks"
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
+            />
+          </div>
+          <div>
+            <Label>Delivery Location</Label>
+            <Textarea
+              placeholder="Enter Location"
+              value={deliveryLocation}
+              onChange={(e) => setDeliveryLocation(e.target.value)}
             />
           </div>
         </div>

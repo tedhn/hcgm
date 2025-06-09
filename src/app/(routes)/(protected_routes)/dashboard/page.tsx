@@ -15,6 +15,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { calculateTotal } from "~/lib/utils";
 
 export type ForecastRow = {
   id: number;
@@ -33,33 +34,6 @@ function formatNumberWithCommas(value: number | string) {
   return num.toLocaleString();
 }
 
-export const calculateTotal = (arr: ForecastRow[] | undefined) => {
-  if (arr === undefined || arr.length === 0) {
-    return [];
-  }
-  const type = arr[0]!.type;
-
-  const totalRow = arr.reduce(
-    (acc, cur) => {
-      acc.central += Number(cur.central) ?? 0;
-      acc.e_coast += Number(cur.e_coast) ?? 0;
-      acc.south += Number(cur.south) ?? 0;
-      acc.north += Number(cur.north) ?? 0;
-      return acc;
-    },
-    {
-      id: 0,
-      central: 0,
-      e_coast: 0,
-      south: 0,
-      north: 0,
-      item_group: "Total",
-      type: type,
-    } as ForecastRow,
-  );
-
-  return [...arr.sort((a, b) => a.id - b.id), totalRow];
-};
 
 const DashboardPage = () => {
   const updateMutation = api.dashboard.updateForecast.useMutation();

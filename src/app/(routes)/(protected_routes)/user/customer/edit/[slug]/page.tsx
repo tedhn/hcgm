@@ -10,6 +10,7 @@ import { useIsMobile } from "~/hooks/useMobile";
 import BackButton from "~/app/_components/back-button";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
+import { useUserStore } from "~/lib/store/useUserStore";
 
 const initialData = {
   CODE: "",
@@ -31,7 +32,7 @@ export default function EditCustomerPage() {
   const isMobile = useIsMobile();
   const params = useParams();
   const router = useRouter();
-
+const {user } = useUserStore()
   const customerId = params.slug ? Number(params.slug) : null;
 
 
@@ -82,6 +83,7 @@ export default function EditCustomerPage() {
 
     editCustomer.mutate({
       ID: customerId,
+      ADMIN_ID : user!.ID,
       ...formData,
     });
   };

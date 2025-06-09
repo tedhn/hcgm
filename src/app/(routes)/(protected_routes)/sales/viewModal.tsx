@@ -12,10 +12,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import type { SalesType } from "~/lib/types";
 import { api } from "~/trpc/react";
 import { Button } from "~/components/ui/button";
-import { renderStatus } from "./page";
 import { LoadingSpinner } from "~/components/ui/loader";
 import toast from "react-hot-toast";
 import { useEffect } from "react";
+import { renderStatus } from "~/lib/utils";
 
 interface SalesDetailsDialogProps {
   open: boolean;
