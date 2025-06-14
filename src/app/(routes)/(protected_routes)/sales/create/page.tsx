@@ -419,9 +419,8 @@ const CreateSalesPage = () => {
                 <SelectValue placeholder="Select method" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Air">Air</SelectItem>
-                <SelectItem value="Sea">Sea</SelectItem>
-                <SelectItem value="Land">Land</SelectItem>
+                <SelectItem value="delivery">Delivery</SelectItem>
+                <SelectItem value="ex">Ex</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -25,6 +25,14 @@ export function isAdmin(role: string | undefined) {
   return role.toLowerCase() !== "salesperson";
 }
 
+export function isMasterAdmin(role: string | undefined) {
+  if (!role) {
+    return false;
+  }
+
+  return role.replace("_", "").toLowerCase() === "masteradmin";
+}
+
 export const calculateTotal = (arr: ForecastRow[] | undefined) => {
   if (arr === undefined || arr.length === 0) {
     return [];

@@ -30,7 +30,7 @@ import { Label } from "~/components/ui/label";
 import { Input } from "~/components/ui/input";
 import { CalendarIcon, Check, ChevronsUpDown, Trash2 } from "lucide-react";
 import { Button } from "~/components/ui/button";
-import { cn } from "~/lib/utils";
+import { cn, isAdmin } from "~/lib/utils";
 import { Calendar } from "~/components/ui/calendar";
 import { useIsMobile } from "~/hooks/useMobile";
 import BackButton from "~/app/_components/back-button";
@@ -87,7 +87,7 @@ const EditSalesPage = () => {
   });
 
   useEffect(() => {
-    if (user?.ID !== salesData?.ADMIN_ID) {
+    if (user?.ID !== salesData?.ADMIN_ID && !isAdmin(user?.ROLE)) {
       toast.error("You are not authorized to edit this.");
       router.push("/sales");
     }

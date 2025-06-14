@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import React, { useEffect } from "react";
+import toast from "react-hot-toast";
 import BackButton from "~/app/_components/back-button";
 import { Regions, Roles } from "~/app/const";
 import { Button } from "~/components/ui/button";
@@ -14,9 +15,12 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { useIsMobile } from "~/hooks/useMobile";
+import { useUserStore } from "~/lib/store/useUserStore";
+import { isMasterAdmin } from "~/lib/utils";
 import { api } from "~/trpc/react";
 
 const CreateAdminPage = () => {
+  const { user } = useUserStore();
   const router = useRouter();
   const [code, setCode] = React.useState("");
   const [name, setName] = React.useState("");
@@ -56,6 +60,13 @@ const CreateAdminPage = () => {
       router.push("/user");
     }
   }, [data, isPending, error, isError, router]);
+
+  useEffect(() => {
+    if (!isMasterAdmin(user?.ROLE)) {
+      toast.error("You are not authorized to edit this.");
+      router.push("/user");
+    }
+  }, [router, user]);
 
   return (
     <div className="w-full px-0 pt-4 lg:px-14">
