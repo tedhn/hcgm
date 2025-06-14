@@ -77,7 +77,7 @@ const ProductsPage = () => {
       header: "Customer",
       size: 220,
       cell: ({ row }) => (
-        <div className="max-w-[240] overflow-hidden truncate">
+        <div className="max-w-[240px] overflow-hidden truncate">
           {row.original.CUSTOMER?.NAME ?? "-"}
         </div>
       ),
@@ -87,7 +87,7 @@ const ProductsPage = () => {
       header: "Location",
       size: 210,
       cell: ({ row }) => (
-        <div className="max-w-[240] overflow-hidden truncate">
+        <div className="max-w-[240px] overflow-hidden truncate">
           {row.original.LOCATION ?? "-"}
         </div>
       ),
