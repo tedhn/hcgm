@@ -10,6 +10,9 @@ import { Pencil, Trash } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import type { ProductType } from "~/lib/types";
 import SearchBar from "~/app/_components/search-bar";
+import { Dialog } from "~/components/ui/dialog";
+import DeleteModal from "~/app/_components/DeleteModal";
+import toast from "react-hot-toast";
 
 const ProductsPage = () => {
   const current_path = usePathname();
@@ -18,6 +21,9 @@ const ProductsPage = () => {
 
   const [isSearching, setIsSearching] = useState(false);
 
+  const [selectedRow, setSelectedRow] = useState<number>(0);
+  const [showModal, setShowModal] = useState(false);
+
   const { data: productData, isLoading } = api.product.getAll.useQuery();
 
   const deleteMutation = api.product.delete.useMutation();
@@ -25,13 +31,21 @@ const ProductsPage = () => {
     mutate: searchMutate,
     isPending,
     data: searchData,
-  } = api.product.search.useMutation();
+  } = api.product.search.useMutation({
+    onSuccess: () => {
+      void utils.product.getAll.invalidate();
+    },
+  });
 
-  const handleDelete = (id: number) => {
-    console.log("delete", id);
+  const handleDelete = async (id: number) => {
+    setSelectedRow(0);
+    setShowModal(false);
 
-    deleteMutation.mutate({ id });
-    void utils.product.getAll.invalidate();
+    await toast.promise(deleteMutation.mutateAsync({ id }), {
+      loading: "Deleting...",
+      success: "Product deleted successfully",
+      error: "Error deleting product",
+    });
   };
 
   const productColumns: ColumnDef<ProductType>[] = [
@@ -124,7 +138,10 @@ const ProductsPage = () => {
             <Button
               variant="ghost"
               className="text-red-500 focus:bg-red-500/10 focus:text-red-500"
-              onClick={() => handleDelete(row.original.ID)}
+              onClick={() => {
+                setSelectedRow(row.original.ID);
+                setShowModal(true);
+              }}
             >
               <Trash className="h-2 w-2" />
             </Button>
@@ -170,14 +187,14 @@ const ProductsPage = () => {
           />
         </section>
 
-        {/* <section>
-          <h1>Customers</h1>
-          <DataTable
-            columns={customerColumns}
-            data={customerData}
-            isLoading={isLoading}
+        <Dialog open={showModal} onOpenChange={() => setShowModal(false)}>
+          <DeleteModal
+            handleDelete={() => handleDelete(selectedRow)}
+            closeModal={() => {
+              setShowModal(false);
+            }}
           />
-        </section> */}
+        </Dialog>
       </div>
     </>
   );

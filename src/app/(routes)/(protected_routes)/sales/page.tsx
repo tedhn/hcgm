@@ -14,6 +14,8 @@ import toast from "react-hot-toast";
 import { isAdmin, renderStatus } from "~/lib/utils";
 import { useUserStore } from "~/lib/store/useUserStore";
 import SearchBar from "~/app/_components/search-bar";
+import DeleteModal from "~/app/_components/DeleteModal";
+import { Dialog } from "~/components/ui/dialog";
 
 const ProductsPage = () => {
   const current_path = usePathname();
@@ -23,28 +25,37 @@ const ProductsPage = () => {
   const { user } = useUserStore();
   const [selectedRow, setSelectedRow] = useState<SalesType | null>(null);
   const [openViewModal, setOpenViewModal] = useState(false);
+  const [openDeleteModal, setOpenDeleteModal] = useState(false);
 
   const [isSearching, setIsSearching] = useState(false);
+
   const { data: apiData, isLoading } = api.transactions.getAll.useQuery(
     {
       userId: user?.ID ?? 0,
     },
     { enabled: !!user },
   );
-  const { mutate: deleteTransaction } = api.transactions.delete.useMutation({
-    onSuccess: () => {
-      void utils.transactions.getAll.invalidate();
-      toast.success("Transaction deleted successfully");
-    },
-  });
+  const { mutateAsync: deleteTransaction } =
+    api.transactions.delete.useMutation({
+      onSuccess: () => {
+        void utils.transactions.getAll.invalidate();
+      },
+    });
   const {
     mutate: searchMutate,
     isPending,
     data: searchData,
   } = api.transactions.search.useMutation();
 
-  const handleDelete = (id: number) => {
-    deleteTransaction({ transaction_id: id });
+  const handleDelete = async (id: number) => {
+    setSelectedRow(null);
+    setOpenDeleteModal(false);
+
+    await toast.promise(deleteTransaction({ transaction_id: id }), {
+      loading: "Deleting...",
+      success: "Transaction deleted successfully",
+      error: "Error deleting transaction",
+    });
   };
 
   const handleSearch = (value: string) => {
@@ -144,7 +155,10 @@ const ProductsPage = () => {
             <Button
               variant="ghost"
               className="text-red-500 focus:bg-red-500/10 focus:text-red-500"
-              onClick={() => handleDelete(row.original.ID)}
+              onClick={() => {
+                setOpenDeleteModal(true);
+                setSelectedRow(row.original);
+              }}
             >
               <Trash className="h-4 w-4" />
             </Button>
@@ -196,6 +210,18 @@ const ProductsPage = () => {
             onOpenChange={setOpenViewModal}
           />
         )}
+
+        <Dialog
+          open={openDeleteModal}
+          onOpenChange={() => setOpenDeleteModal(false)}
+        >
+          <DeleteModal
+            handleDelete={() => handleDelete(selectedRow!.ID)}
+            closeModal={() => {
+              setOpenDeleteModal(false);
+            }}
+          />
+        </Dialog>
       </div>
     </>
   );

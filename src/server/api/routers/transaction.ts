@@ -187,7 +187,7 @@ export const transactionRouter = createTRPCRouter({
         comission: z
           .number()
           .min(0, "Commission must be a non-negative number"),
-        remark: z.string().min(1, "Remark is required"),
+        remark: z.string().optional(),
         products: z.array(
           z.object({ id: z.number(), quantity: z.number(), price: z.number() }),
         ),
@@ -202,9 +202,6 @@ export const transactionRouter = createTRPCRouter({
         where: { ID: input.transaction_id }, // Ensure the ID matches
         data: {
           DOC_NUM: input.doc_num,
-          TRANSACTION_DATE: new Date(input.transaction_date),
-          CUSTOMER_ID: +input.customer_id,
-          ADMIN_ID: +input.admin_id,
           TOTAL_PRICE: input.total_price,
           REF_DOC_NO: input.ref_doc_no,
           DELIVERY_DATE: input.delivery_date,

@@ -214,6 +214,14 @@ export const userRouter = createTRPCRouter({
       switch (input.type) {
         case "admin":
           // Delete the admin
+
+          if (input.id === 10) {
+            throw new TRPCError({
+              code: "FORBIDDEN",
+              message: "You cannot delete this admin",
+            });
+          }
+
           await ctx.db.admin.delete({
             where: { ID: input.id },
           });

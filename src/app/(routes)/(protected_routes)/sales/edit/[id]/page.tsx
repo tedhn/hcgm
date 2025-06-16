@@ -128,7 +128,7 @@ const EditSalesPage = () => {
       doc_num: documentNo,
       transaction_date: new Date().toISOString(),
       customer_id: customerId,
-      admin_id: "3",
+      admin_id: user!.ID + "",
       total_price: productDetails.reduce(
         (total, product) => total + +product.price * +product.quantity,
         0,
@@ -195,6 +195,7 @@ const EditSalesPage = () => {
                   variant="outline"
                   role="combobox"
                   className="w-full justify-between"
+                  disabled
                 >
                   {customerId
                     ? customerData?.find((c) => c.ID === +customerId)?.NAME
@@ -418,9 +419,8 @@ const EditSalesPage = () => {
                 <SelectValue placeholder="Select method" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Air">Air</SelectItem>
-                <SelectItem value="Sea">Sea</SelectItem>
-                <SelectItem value="Land">Land</SelectItem>
+                <SelectItem value="delivery">Delivery</SelectItem>
+                <SelectItem value="ex">Ex</SelectItem>
               </SelectContent>
             </Select>
           </div>

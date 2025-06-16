@@ -13,8 +13,11 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "~/components/ui/tabs";
 import { type REGION, REGION_LABELS } from "~/app/const";
 import toast from "react-hot-toast";
 import SearchBar from "~/app/_components/search-bar";
-import { isAdmin } from "~/lib/utils";
+import { isAdmin, isMasterAdmin } from "~/lib/utils";
 import { useUserStore } from "~/lib/store/useUserStore";
+import { Dialog } from "@radix-ui/react-dialog";
+import DeleteModal from "~/app/_components/DeleteModal";
+import type { TRPCError } from "@trpc/server";
 
 const UserPage = () => {
   const current_path = usePathname();
@@ -24,6 +27,8 @@ const UserPage = () => {
   const { user } = useUserStore();
   const [currentTab, setCurrentTab] = useState<string>("admin");
   const [isSearching, setIsSearching] = useState(false);
+  const [selectedRow, setSelectedRow] = useState<number>(0);
+  const [showModal, setShowModal] = useState(false);
 
   const { data: userData, isLoading } = api.user.getAll.useQuery(
     { userId: user?.ID ?? -1 },
@@ -38,12 +43,15 @@ const UserPage = () => {
   const deleteUserMutation = api.user.deleteUser.useMutation();
 
   const handleDelete = async (id: number, type: string) => {
+    setShowModal(false);
     const promise = deleteUserMutation.mutateAsync({ id: id, type });
 
     await toast.promise(promise, {
       loading: "Deleting...",
       success: "User deleted successfully",
-      error: "Error deleting user",
+      error: (err: TRPCError) => {
+        return err.message;
+      },
     });
 
     void utils.user.getAll.invalidate();
@@ -137,7 +145,10 @@ const UserPage = () => {
                 <Button
                   variant="ghost"
                   className="text-red-500 focus:bg-red-500/10 focus:text-red-500"
-                  onClick={() => handleDelete(row.original.ID, "admin")}
+                  onClick={() => {
+                    setSelectedRow(row.original.ID);
+                    setShowModal(true);
+                  }}
                 >
                   <Trash className="h-2 w-2" />
                 </Button>
@@ -226,7 +237,10 @@ const UserPage = () => {
               <Button
                 variant="ghost"
                 className="text-red-500 focus:bg-red-500/10 focus:text-red-500"
-                onClick={() => handleDelete(row.original.ID, "admin")}
+                onClick={() => {
+                  setSelectedRow(row.original.ID);
+                  setShowModal(true);
+                }}
               >
                 <Trash className="h-2 w-2" />
               </Button>
@@ -260,7 +274,7 @@ const UserPage = () => {
         <div className="flex items-center justify-between">
           <h1 className="mb-6 text-3xl">Users</h1>
 
-          {isAdmin(user?.ROLE) ? (
+          {isMasterAdmin(user?.ROLE) ? (
             <Button
               className="mb-4"
               onClick={() =>
@@ -307,6 +321,15 @@ const UserPage = () => {
             />
           </TabsContent>
         </Tabs>
+
+        <Dialog open={showModal} onOpenChange={() => setShowModal(false)}>
+          <DeleteModal
+            handleDelete={() => handleDelete(selectedRow, currentTab)}
+            closeModal={() => {
+              setShowModal(false);
+            }}
+          />
+        </Dialog>
       </div>
     </>
   );
