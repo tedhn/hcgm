@@ -180,22 +180,16 @@ const UserPage = () => {
     {
       accessorKey: "EMAIL",
       header: "Email",
-      cell: ({ row }) => {
-        const email = row.original.EMAIL;
-        return <div>{email ?? "-"}</div>;
-      },
+      cell: ({ row }) => <div>{row.original.EMAIL ?? "-"}</div>,
     },
     {
       accessorKey: "PHONE_NO",
       header: "Phone",
-      cell: ({ row }) => {
-        const phone = row.original.PHONE_NO;
-        return <div>{phone ?? "-"}</div>;
-      },
+      cell: ({ row }) => <div>{row.original.PHONE_NO ?? "-"}</div>,
       size: 150,
     },
     {
-      accessorKey: "address",
+      accessorKey: "ADDRESS",
       header: "Address",
       cell: ({ row }) => {
         const address = row.original.ADDRESS;
@@ -204,7 +198,43 @@ const UserPage = () => {
       size: 300,
     },
     {
-      accessorKey: "creditTerm",
+      accessorKey: "SSM_REGISTRATION_NO",
+      header: "SSM No",
+      cell: ({ row }) => <div>{row.original.SSM_REGISTRATION_NO ?? "-"}</div>,
+      size: 150,
+    },
+    {
+      accessorKey: "TAX_IDENTIFICATION_NO",
+      header: "Tax ID",
+      cell: ({ row }) => <div>{row.original.TAX_IDENTIFICATION_NO ?? "-"}</div>,
+      size: 150,
+    },
+    {
+      accessorKey: "SST_NO",
+      header: "SST No",
+      cell: ({ row }) => <div>{row.original.SST_NO ?? "-"}</div>,
+      size: 150,
+    },
+    {
+      accessorKey: "MSIC_CODE",
+      header: "MSIC Code",
+      cell: ({ row }) => <div>{row.original.MSIC_CODE ?? "-"}</div>,
+      size: 150,
+    },
+    {
+      accessorKey: "BUSINESS_NATURE",
+      header: "Business Nature",
+      cell: ({ row }) => <div>{row.original.BUSINESS_NATURE ?? "-"}</div>,
+      size: 200,
+    },
+    {
+      accessorKey: "PIC_NAME",
+      header: "PIC Name",
+      cell: ({ row }) => <div>{row.original.PIC_NAME ?? "-"}</div>,
+      size: 200,
+    },
+    {
+      accessorKey: "CREDIT_TERM",
       header: "Credit Term",
       cell: ({ row }) => {
         return row.original.CREDIT_TERM?.replace("Net", "").trim() ?? "-";
@@ -212,43 +242,47 @@ const UserPage = () => {
       size: 110,
     },
     {
-      accessorKey: "creditLimit",
+      accessorKey: "CREDIT_LIMIT",
       header: "Credit Limit",
-      cell: ({ row }) => {
-        return `${row.original.CREDIT_LIMIT! / 1000}k`;
-      },
+      cell: ({ row }) => `${row.original.CREDIT_LIMIT! / 1000}k`,
       size: 110,
     },
     {
-      id: "actions",
-      size: 40,
+      accessorKey: "CREATED_AT",
+      header: "Created At",
       cell: ({ row }) => {
-        return (
-          <div className="flex items-center justify-center">
+        return new Date(row.original.CREATED_AT).toLocaleDateString();
+      },
+      size: 150,
+    },
+    {
+      id: "actions",
+      size: 60,
+      cell: ({ row }) => (
+        <div className="flex items-center justify-center gap-1">
+          <Button
+            variant="ghost"
+            className="text-blue-500 focus:bg-blue-500/10 focus:text-blue-500"
+            onClick={() =>
+              router.push(`${current_path}/customer/edit/${row.original.ID}`)
+            }
+          >
+            <Pencil className="h-2 w-2" />
+          </Button>
+          {isAdmin(user?.ROLE) && (
             <Button
               variant="ghost"
-              className="text-blue-500 focus:bg-blue-500/10 focus:text-blue-500"
-              onClick={() =>
-                router.push(`${current_path}/customer/edit/${row.original.ID}`)
-              }
+              className="text-red-500 focus:bg-red-500/10 focus:text-red-500"
+              onClick={() => {
+                setSelectedRow(row.original.ID);
+                setShowModal(true);
+              }}
             >
-              <Pencil className="h-2 w-2" />
+              <Trash className="h-2 w-2" />
             </Button>
-            {isAdmin(user?.ROLE) && (
-              <Button
-                variant="ghost"
-                className="text-red-500 focus:bg-red-500/10 focus:text-red-500"
-                onClick={() => {
-                  setSelectedRow(row.original.ID);
-                  setShowModal(true);
-                }}
-              >
-                <Trash className="h-2 w-2" />
-              </Button>
-            )}
-          </div>
-        );
-      },
+          )}
+        </div>
+      ),
     },
   ];
 
@@ -338,7 +372,7 @@ const UserPage = () => {
             />
           </TabsContent>
 
-          <TabsContent value="customer">
+          <TabsContent value="customer" className="max-w-[68rem]">
             <DataTable
               columns={customerColumns}
               data={displayedCustomerData}
