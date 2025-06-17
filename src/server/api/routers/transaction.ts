@@ -1,5 +1,9 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
+import { EmailTemplate } from "~/app/_components/email-template";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const transactionRouter = createTRPCRouter({
   getAll: publicProcedure
@@ -161,6 +165,14 @@ export const transactionRouter = createTRPCRouter({
         });
       }
 
+
+      await resend.emails.send({
+        from: "Acme <onboarding@resend.dev>",
+        to: ["heinhtetnaing186@gmail.com"],
+        subject: `New Sales ${transactions.ID}`,
+        react: EmailTemplate({ sales: transactions }),
+      });
+
       return new Promise((resolve) => {
         resolve({
           success: true,
@@ -197,6 +209,16 @@ export const transactionRouter = createTRPCRouter({
     )
 
     .mutation(async ({ input, ctx }) => {
+      const existingTransaction = await ctx.db.transaction.findUnique({
+        where: { ID: input.transaction_id },
+      });
+
+      if (!existingTransaction) {
+        throw new Error(
+          `Transaction with ID ${input.transaction_id} not found.`,
+        );
+      }
+
       // Update the transaction in the database
       const updatedTransaction = await ctx.db.transaction.update({
         where: { ID: input.transaction_id }, // Ensure the ID matches
@@ -228,6 +250,16 @@ export const transactionRouter = createTRPCRouter({
             UNIT_PRICE: product.price,
           })),
         });
+
+      // ✅ Send email if status changed
+      if (existingTransaction.STATUS !== input.status) {
+        await resend.emails.send({
+          from: "Acme <onboarding@resend.dev>",
+          to: ["heinhtetnaing186@gmail.com"],
+          subject: `Updated Sales Status : ${updatedTransaction.ID}`,
+          react: EmailTemplate({ sales: updatedTransaction }),
+        });
+      }
 
       return new Promise((resolve) => {
         resolve({

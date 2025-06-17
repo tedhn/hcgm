@@ -4,8 +4,6 @@ import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
 import type { CustomerType, UserType } from "~/lib/types";
-import { Resend } from "resend";
-import { EmailTemplate } from "~/app/_components/email-template";
 
 const LoginSchema = z.object({
   email: z.string().email(),
@@ -28,6 +26,23 @@ export const customerBaseSchema = z.object({
   CREDIT_LIMIT: z.number(),
   ADMIN_ID: z.number(),
 });
+export const TransactionSchema = z.object({
+  ID: z.number().int(), // Optional for creation; Prisma will auto-generate
+  DOC_NUM: z.string().default(""),
+  TRANSACTION_DATE: z.coerce.date().default(new Date()), // coerce handles string/Date
+  CUSTOMER_ID: z.number().int(),
+  ADMIN_ID: z.number().int(),
+  TOTAL_PRICE: z.number().default(0),
+  REF_DOC_NO: z.string().optional().default(""),
+  DELIVERY_DATE: z.coerce.date().optional().nullable(),
+  SHIPPING_METHOD: z.string().optional().default(""),
+  COMISSION: z.number().optional().default(0),
+  REMARK: z.string().optional().default(""),
+  STATUS: z.string().default(""),
+  LOCATION: z.string(),
+  // Admin and Customer are relations — usually excluded or validated separately
+  // TransactionDetail would be handled via nested validation if needed
+});
 
 export const createCustomerSchema = customerBaseSchema;
 
@@ -39,28 +54,7 @@ export const deleteCustomerSchema = z.object({
   ID: z.number(), // or z.number()
 });
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export const userRouter = createTRPCRouter({
-  sendEmail: publicProcedure
-    .input(z.object({ email: z.string().email() }))
-    .mutation(async ({ input, ctx }) => {
-      console.log(input.email);
-      const { data, error } = await resend.emails.send({
-        from: "Acme <onboarding@resend.dev>",
-        to: [input.email],
-        subject: "Hello world",
-        react: EmailTemplate({ firstName: "TED TESTING" }),
-      });
-
-      console.log(data);
-
-      console.log("FINDME");
-      console.log(error);
-
-      // return { };
-    }),
-
   getAll: publicProcedure
     .input(z.object({ userId: z.number() }))
     .query(async ({ input, ctx }) => {
