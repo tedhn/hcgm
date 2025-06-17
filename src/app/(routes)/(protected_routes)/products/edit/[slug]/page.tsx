@@ -1,6 +1,7 @@
 "use client";
 import { useParams, useRouter } from "next/navigation";
 import React, { useEffect } from "react";
+import toast from "react-hot-toast";
 import BackButton from "~/app/_components/back-button";
 import { Category } from "~/app/const";
 import { Button } from "~/components/ui/button";
@@ -26,7 +27,16 @@ const EditProductPage = () => {
   const [stock, setStock] = React.useState("");
   const [unitPrice, setUnitPrice] = React.useState("");
 
-  const { mutate, data: editData, isPending } = api.product.edit.useMutation();
+  const utils = api.useUtils();
+  const {
+    mutateAsync,
+    data: editData,
+    isPending,
+  } = api.product.edit.useMutation({
+    onSuccess: () => {
+      void utils.product.getAll.invalidate();
+    },
+  });
 
   const { data, isLoading } = api.product.getOne.useQuery({
     id: params.slug ? +params.slug : -1,
@@ -34,17 +44,31 @@ const EditProductPage = () => {
 
   const isMobile = useIsMobile();
 
-  const handleEdit = () => {
-    console.log("edit", data?.ID);
-    mutate({
-      id: data!.ID,
-      name,
-      category,
-      base_uom: baseUom,
-      stock: +stock,
-      unit_price: +unitPrice,
-      code,
-    });
+  const handleEdit = async () => {
+    if (!name || !category || !baseUom || !stock || !unitPrice || !code) {
+      return toast.error("Please fill in all the fields.");
+    }
+
+    if (isNaN(+stock) || isNaN(+unitPrice)) {
+      return toast.error("Stock and Unit Price must be numbers");
+    }
+
+    await toast.promise(
+      mutateAsync({
+        id: data!.ID,
+        name,
+        category,
+        base_uom: baseUom,
+        stock: +stock,
+        unit_price: +unitPrice,
+        code,
+      }),
+      {
+        loading: "Editing product...",
+        success: "Product edited successfully!",
+        error: "Failed to edit product",
+      },
+    );
   };
 
   useEffect(() => {

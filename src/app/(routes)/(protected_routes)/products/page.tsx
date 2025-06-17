@@ -196,7 +196,7 @@ const ProductsPage = () => {
               className="mb-4"
               onClick={() => router.push(current_path + "/create")}
             >
-              Add Products
+              Create Products
             </Button>
           </div>
         </div>

@@ -109,7 +109,9 @@ export default function CreateCustomerPage() {
           <h2 className="text-lg font-semibold">Registration & Tax Info</h2>
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <Label htmlFor="SSM_REGISTRATION_NO">SSM Registration No</Label>
+              <Label htmlFor="SSM_REGISTRATION_NO">
+                SSM Registration No (Optional)
+              </Label>
               <Input
                 id="SSM_REGISTRATION_NO"
                 name="SSM_REGISTRATION_NO"
@@ -118,7 +120,9 @@ export default function CreateCustomerPage() {
               />
             </div>
             <div>
-              <Label htmlFor="TAX_IDENTIFICATION_NO">Tax ID No</Label>
+              <Label htmlFor="TAX_IDENTIFICATION_NO">
+                Tax ID No (Optional)
+              </Label>
               <Input
                 id="TAX_IDENTIFICATION_NO"
                 name="TAX_IDENTIFICATION_NO"
@@ -127,7 +131,7 @@ export default function CreateCustomerPage() {
               />
             </div>
             <div>
-              <Label htmlFor="SST_NO">SST No</Label>
+              <Label htmlFor="SST_NO">SST No (Optional)</Label>
               <Input
                 id="SST_NO"
                 name="SST_NO"
@@ -136,7 +140,7 @@ export default function CreateCustomerPage() {
               />
             </div>
             <div>
-              <Label htmlFor="MSIC_CODE">MSIC Code</Label>
+              <Label htmlFor="MSIC_CODE">MSIC Code (Optional)</Label>
               <Input
                 id="MSIC_CODE"
                 name="MSIC_CODE"
@@ -152,7 +156,9 @@ export default function CreateCustomerPage() {
           <h2 className="text-lg font-semibold">Business Details</h2>
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <Label htmlFor="BUSINESS_NATURE">Business Nature</Label>
+              <Label htmlFor="BUSINESS_NATURE">
+                Business Nature (Optional)
+              </Label>
               <Input
                 id="BUSINESS_NATURE"
                 name="BUSINESS_NATURE"
@@ -161,7 +167,7 @@ export default function CreateCustomerPage() {
               />
             </div>
             <div>
-              <Label htmlFor="PIC_NAME">Person in Charge</Label>
+              <Label htmlFor="PIC_NAME">Person in Charge (Optional)</Label>
               <Input
                 id="PIC_NAME"
                 name="PIC_NAME"
@@ -177,7 +183,7 @@ export default function CreateCustomerPage() {
           <h2 className="text-lg font-semibold">Contact Info</h2>
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <Label htmlFor="EMAIL">Email</Label>
+              <Label htmlFor="EMAIL">Email (Optional)</Label>
               <Input
                 id="EMAIL"
                 name="EMAIL"

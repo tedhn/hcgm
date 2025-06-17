@@ -330,6 +330,6 @@ export const transactionRouter = createTRPCRouter({
     const parser = new Parser();
     const csv = parser.parse(data);
 
-    return csv as string; // We'll return as string
+    return csv ; // We'll return as string
   }),
 });

@@ -31,7 +31,7 @@ const UserPage = () => {
   const [showModal, setShowModal] = useState(false);
 
   const { data: userData, isLoading } = api.user.getAll.useQuery(
-    { userId: user?.ID ?? -1 },
+    { userId: user?.ID ?? -1, role: user?.ROLE ?? "" },
     { enabled: !!user },
   );
   const {

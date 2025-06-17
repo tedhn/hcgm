@@ -33,9 +33,13 @@ const EditUserPage = () => {
   const [password, setPassword] = React.useState("");
   const [role, setRole] = React.useState<string>("");
 
+  const utils = api.useUtils();
+  const type = window.location.pathname.includes("admin")
+    ? "admin"
+    : "customer";
   const adminId = params.slug ? Number(params.slug) : null;
   const { data, isLoading } = api.user.getOne.useQuery(
-    { id: adminId ?? -1, type: "customer" },
+    { id: adminId ?? -1, type: type },
     { enabled: !!adminId },
   );
 
@@ -43,7 +47,13 @@ const EditUserPage = () => {
     mutate,
     isPending,
     data: editData,
-  } = api.user.editAdmin.useMutation();
+  } = api.user.editAdmin.useMutation({
+    onSuccess: () => {
+      void utils.user.getAll.invalidate();
+      void utils.user.getOne.invalidate();
+      toast.success("Admin updated successfully!");
+    },
+  });
 
   useEffect(() => {
     if (!isAdmin(user?.ROLE)) {

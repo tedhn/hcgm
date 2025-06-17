@@ -38,6 +38,14 @@ const CreateProductPage = () => {
   const isMobile = useIsMobile();
 
   const handleCreate = async () => {
+    if (!name || !category || !baseUom || !stock || !unitPrice || !code) {
+      return toast.error("Please fill in all the fields.");
+    }
+
+    if (isNaN(+stock) || isNaN(+unitPrice)) {
+      return toast.error("Stock and Unit Price must be numbers");
+    }
+
     const promise = mutateAsync({
       name,
       category,

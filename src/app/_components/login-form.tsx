@@ -40,6 +40,8 @@ export function LoginForm({
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    if (!email || !password) return toast.error("Please fill all the fields");
+
     const promise = mutateAsync({ email, password });
 
     await toast.promise(promise, {

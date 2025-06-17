@@ -12,6 +12,7 @@ import { useParams, useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
 import { useUserStore } from "~/lib/store/useUserStore";
 import type { Customer } from "@prisma/client";
+import { isMasterAdmin } from "~/lib/utils";
 
 const initialData = {
   CODE: "",
@@ -70,7 +71,7 @@ export default function EditCustomerPage() {
 
   useEffect(() => {
     const formattedData = data as Customer;
-    if (user?.ID !== formattedData?.ADMIN_ID) {
+    if (user?.ID !== formattedData?.ADMIN_ID && !isMasterAdmin(user?.ROLE)) {
       hasRedirected.current = true;
       toast.error("You are not authorized to edit this customer.");
       router.push("/user");

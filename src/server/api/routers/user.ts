@@ -60,11 +60,12 @@ export const deleteCustomerSchema = z.object({
 
 export const userRouter = createTRPCRouter({
   getAll: publicProcedure
-    .input(z.object({ userId: z.number() }))
+    .input(z.object({ userId: z.number(), role: z.string() }))
     .query(async ({ input, ctx }) => {
       const admin = await ctx.db.admin.findMany();
       const customers = await ctx.db.customer.findMany({
-        where: { ADMIN_ID: input.userId },
+        where:
+          input.role === "salesperson" ? { ADMIN_ID: input.userId } : undefined,
       });
 
       const safeAdmin = admin.map((a: Admin) => {
@@ -110,7 +111,7 @@ export const userRouter = createTRPCRouter({
         name: z.string().min(1, "Name is required"),
         email: z.string().email("Invalid email"),
         password: z.string().min(6, "Password must be at least 6 characters"),
-        phone: z.number().min(10, "Phone Number is invalid"),
+        phone: z.number(),
         role: z.string().min(1, "Invalid role"),
         code: z.string().min(1, "Invalid Code"),
       }),

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 "use client";
 import { useRouter } from "next/navigation";
 import React, { useEffect } from "react";
@@ -29,37 +30,62 @@ const CreateAdminPage = () => {
   const [password, setPassword] = React.useState("");
   const [role, setRole] = React.useState<string>("Salesperson");
   const [region, setRegion] = React.useState<string>("Central");
+  const utils = api.useUtils();
 
-  const { mutate, data, isPending, error, isError } =
-    api.user.createAdmin.useMutation();
+  const {
+    mutateAsync,
+    data,
+    isPending,
+    error: e,
+    isError,
+  } = api.user.createAdmin.useMutation({
+    onSuccess: () => {
+      void utils.user.getAll.invalidate();
+
+      router.push("/user");
+    },
+  });
 
   const isMobile = useIsMobile();
 
   const handleCreate = async () => {
-    console.log(role);
+    if (!name || !email || !role || !code || !phone || !password) {
+      return toast.error("Please fill in all the fields.");
+    }
 
-    if (!isNaN(+phone)) {
-      mutate({
+    if (isNaN(+phone)) {
+      return toast.error("Phone Number is invalid");
+    }
+
+    if (password.length < 6) {
+      return toast.error("Password should be 6 or more characters.");
+    }
+
+    await toast.promise(
+      mutateAsync({
         name,
         email,
         password,
         phone: +phone,
         role: role.toUpperCase().replaceAll(" ", "_"),
         code,
-      });
-    }
+      }),
+      {
+        loading: "Creating admin...",
+        success: "Admin created successfully!",
+      },
+    );
   };
 
   useEffect(() => {
     if (!isPending && data) {
       if (isError) {
-        console.log(error);
+        console.log(e);
         return;
       }
-
       router.push("/user");
     }
-  }, [data, isPending, error, isError, router]);
+  }, [data, isPending, e, isError, router]);
 
   useEffect(() => {
     if (!isMasterAdmin(user?.ROLE)) {
