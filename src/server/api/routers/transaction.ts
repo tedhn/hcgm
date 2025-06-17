@@ -1,7 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { EmailTemplate } from "~/app/_components/email-template";
 import { Resend } from "resend";
+import { Parser } from "json2csv";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -165,7 +169,6 @@ export const transactionRouter = createTRPCRouter({
         });
       }
 
-
       await resend.emails.send({
         from: "Acme <onboarding@resend.dev>",
         to: ["heinhtetnaing186@gmail.com"],
@@ -320,4 +323,13 @@ export const transactionRouter = createTRPCRouter({
 
       return searchResults;
     }),
+
+  getCsv: publicProcedure.input(z.void()).query(async ({ ctx }) => {
+    const data = await ctx.db.transaction.findMany();
+
+    const parser = new Parser();
+    const csv = parser.parse(data);
+
+    return csv as string; // We'll return as string
+  }),
 });

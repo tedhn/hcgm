@@ -39,6 +39,7 @@ const UserPage = () => {
     data: searchData,
     isPending,
   } = api.user.search.useMutation();
+  const getCsv = api.user.getCsv.useQuery();
 
   const deleteUserMutation = api.user.deleteUser.useMutation();
 
@@ -261,6 +262,24 @@ const UserPage = () => {
     searchMutate({ query: value });
   };
 
+  const handleExport = async () => {
+    const csvData = await getCsv.refetch();
+    if (csvData.data) {
+      const blob = new Blob([csvData.data], {
+        type: "text/csv;charset=utf-8;",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "users.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      console.error("Failed to fetch CSV data");
+    }
+  };
+
   const displayedAdminData = isSearching
     ? (searchData?.admins ?? [])
     : (userData?.admins ?? []);
@@ -274,23 +293,29 @@ const UserPage = () => {
         <div className="flex items-center justify-between">
           <h1 className="mb-6 text-3xl">Users</h1>
 
-          {isMasterAdmin(user?.ROLE) ? (
-            <Button
-              className="mb-4"
-              onClick={() =>
-                router.push(current_path + `/${currentTab}/create`)
-              }
-            >
-              Create {currentTab === "admin" ? "Admin" : "Customer"}
+          <div className="flex gap-2">
+            <Button className="mb-4" onClick={() => handleExport()}>
+              Export
             </Button>
-          ) : (
-            <Button
-              className="mb-4"
-              onClick={() => router.push(current_path + `/customer/create`)}
-            >
-              Create Customer
-            </Button>
-          )}
+
+            {isMasterAdmin(user?.ROLE) ? (
+              <Button
+                className="mb-4"
+                onClick={() =>
+                  router.push(current_path + `/${currentTab}/create`)
+                }
+              >
+                Create {currentTab === "admin" ? "Admin" : "Customer"}
+              </Button>
+            ) : (
+              <Button
+                className="mb-4"
+                onClick={() => router.push(current_path + `/customer/create`)}
+              >
+                Create Customer
+              </Button>
+            )}
+          </div>
         </div>
 
         <SearchBar onSearch={handleSearch} isLoading={isPending} />

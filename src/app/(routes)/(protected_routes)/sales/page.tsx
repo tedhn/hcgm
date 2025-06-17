@@ -47,6 +47,10 @@ const ProductsPage = () => {
     data: searchData,
   } = api.transactions.search.useMutation();
 
+  const getCsv = api.transactions.getCsv.useQuery(undefined, {
+    enabled: false,
+  });
+
   const handleDelete = async (id: number) => {
     setSelectedRow(null);
     setOpenDeleteModal(false);
@@ -66,6 +70,24 @@ const ProductsPage = () => {
     }
 
     searchMutate({ query: value });
+  };
+
+  const handleExport = async () => {
+    const csvData = await getCsv.refetch();
+    if (csvData.data) {
+      const blob = new Blob([csvData.data], {
+        type: "text/csv;charset=utf-8;",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "sales.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      console.error("Failed to fetch CSV data");
+    }
   };
 
   const transactionsColumns: ColumnDef<SalesType>[] = [
@@ -180,12 +202,17 @@ const ProductsPage = () => {
         <div className="flex items-center justify-between">
           <h1 className="mb-6 text-3xl">Sales</h1>
 
-          <Button
-            className="mb-4"
-            onClick={() => router.push(current_path + "/create")}
-          >
-            Create Sales
-          </Button>
+          <div className="flex gap-2">
+            <Button className="mb-4" onClick={() => handleExport()}>
+              Export
+            </Button>
+            <Button
+              className="mb-4"
+              onClick={() => router.push(current_path + "/create")}
+            >
+              Create Sales
+            </Button>
+          </div>
         </div>
 
         <SearchBar onSearch={handleSearch} isLoading={isPending} />

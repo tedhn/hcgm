@@ -1,7 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
 import type { ProductType } from "~/lib/types";
+import { Parser } from "json2csv";
 
 export const productRouter = createTRPCRouter({
   getAll: publicProcedure.query(async ({ ctx }) => {
@@ -162,4 +166,12 @@ export const productRouter = createTRPCRouter({
       });
       return products;
     }),
+  getCsv: publicProcedure.input(z.void()).query(async ({ ctx }) => {
+    const data = await ctx.db.product.findMany();
+
+    const parser = new Parser();
+    const csv = parser.parse(data);
+
+    return csv ; // We'll return as string
+  }),
 });

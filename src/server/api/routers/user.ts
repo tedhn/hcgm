@@ -1,9 +1,13 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { type Admin } from "@prisma/client";
 
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
 import type { CustomerType, UserType } from "~/lib/types";
+import { Parser } from "json2csv";
 
 const LoginSchema = z.object({
   email: z.string().email(),
@@ -374,4 +378,24 @@ export const userRouter = createTRPCRouter({
         customers: searchCustomerResults,
       };
     }),
+  getCsv: publicProcedure.input(z.void()).query(async ({ ctx }) => {
+    const adminData = await ctx.db.admin.findMany();
+    const userData = await ctx.db.customer.findMany();
+
+    // Convert each separately
+    const parser = new Parser();
+    const adminCsv = parser.parse(adminData);
+    const userCsv = parser.parse(userData);
+
+    // Combine with custom markers
+    const csv = [
+      "--- Admin Data ---",
+      adminCsv,
+      "",
+      "--- Customer Data ---",
+      userCsv,
+    ].join("\n");
+
+    return csv;
+  }),
 });
