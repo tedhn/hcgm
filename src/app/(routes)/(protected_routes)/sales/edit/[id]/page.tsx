@@ -87,11 +87,12 @@ const EditSalesPage = () => {
   });
 
   useEffect(() => {
-    if (user?.ID !== salesData?.ADMIN_ID && !isAdmin(user?.ROLE)) {
+    console.log(salesData, user);
+    if (user?.ID !== salesData?.ADMIN_ID && !isAdmin(user?.ROLE) && !isLoading) {
       toast.error("You are not authorized to edit this.");
       router.push("/sales");
     }
-  }, [salesData, router, user]);
+  }, [salesData, router, user , isLoading]);
 
   // Prefill data when salesData arrives
   useEffect(() => {
