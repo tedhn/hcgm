@@ -45,7 +45,7 @@ const ProductsPage = () => {
     await toast.promise(deleteMutation.mutateAsync({ id }), {
       loading: "Deleting...",
       success: "Product deleted successfully",
-      error: "Error deleting product",
+      error: "Poduct has active transactions. Please delete the transactions first.",
     });
   };
 
