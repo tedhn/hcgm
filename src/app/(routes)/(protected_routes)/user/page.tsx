@@ -197,42 +197,42 @@ const UserPage = () => {
       },
       size: 300,
     },
-    {
-      accessorKey: "SSM_REGISTRATION_NO",
-      header: "SSM No",
-      cell: ({ row }) => <div>{row.original.SSM_REGISTRATION_NO ?? "-"}</div>,
-      size: 150,
-    },
-    {
-      accessorKey: "TAX_IDENTIFICATION_NO",
-      header: "Tax ID",
-      cell: ({ row }) => <div>{row.original.TAX_IDENTIFICATION_NO ?? "-"}</div>,
-      size: 150,
-    },
-    {
-      accessorKey: "SST_NO",
-      header: "SST No",
-      cell: ({ row }) => <div>{row.original.SST_NO ?? "-"}</div>,
-      size: 150,
-    },
-    {
-      accessorKey: "MSIC_CODE",
-      header: "MSIC Code",
-      cell: ({ row }) => <div>{row.original.MSIC_CODE ?? "-"}</div>,
-      size: 150,
-    },
-    {
-      accessorKey: "BUSINESS_NATURE",
-      header: "Business Nature",
-      cell: ({ row }) => <div>{row.original.BUSINESS_NATURE ?? "-"}</div>,
-      size: 200,
-    },
-    {
-      accessorKey: "PIC_NAME",
-      header: "PIC Name",
-      cell: ({ row }) => <div>{row.original.PIC_NAME ?? "-"}</div>,
-      size: 200,
-    },
+    // {
+    //   accessorKey: "SSM_REGISTRATION_NO",
+    //   header: "SSM No",
+    //   cell: ({ row }) => <div>{row.original.SSM_REGISTRATION_NO ?? "-"}</div>,
+    //   size: 150,
+    // },
+    // {
+    //   accessorKey: "TAX_IDENTIFICATION_NO",
+    //   header: "Tax ID",
+    //   cell: ({ row }) => <div>{row.original.TAX_IDENTIFICATION_NO ?? "-"}</div>,
+    //   size: 150,
+    // },
+    // {
+    //   accessorKey: "SST_NO",
+    //   header: "SST No",
+    //   cell: ({ row }) => <div>{row.original.SST_NO ?? "-"}</div>,
+    //   size: 150,
+    // },
+    // {
+    //   accessorKey: "MSIC_CODE",
+    //   header: "MSIC Code",
+    //   cell: ({ row }) => <div>{row.original.MSIC_CODE ?? "-"}</div>,
+    //   size: 150,
+    // },
+    // {
+    //   accessorKey: "BUSINESS_NATURE",
+    //   header: "Business Nature",
+    //   cell: ({ row }) => <div>{row.original.BUSINESS_NATURE ?? "-"}</div>,
+    //   size: 200,
+    // },
+    // {
+    //   accessorKey: "PIC_NAME",
+    //   header: "PIC Name",
+    //   cell: ({ row }) => <div>{row.original.PIC_NAME ?? "-"}</div>,
+    //   size: 200,
+    // },
     {
       accessorKey: "CREDIT_TERM",
       header: "Credit Term",
@@ -372,12 +372,14 @@ const UserPage = () => {
             />
           </TabsContent>
 
-          <TabsContent value="customer" className="max-w-[68rem]">
-            <DataTable
-              columns={customerColumns}
-              data={displayedCustomerData}
-              isLoading={isLoading || isPending}
-            />
+          <TabsContent value="customer">
+            <div className="w-full overflow-auto">
+              <DataTable
+                columns={customerColumns}
+                data={displayedCustomerData}
+                isLoading={isLoading || isPending}
+              />
+            </div>
           </TabsContent>
         </Tabs>
 
