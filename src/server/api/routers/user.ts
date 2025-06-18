@@ -62,10 +62,13 @@ export const userRouter = createTRPCRouter({
   getAll: publicProcedure
     .input(z.object({ userId: z.number(), role: z.string() }))
     .query(async ({ input, ctx }) => {
+      console.log(input);
       const admin = await ctx.db.admin.findMany();
       const customers = await ctx.db.customer.findMany({
         where:
-          input.role === "salesperson" ? { ADMIN_ID: input.userId } : undefined,
+          input.role.toLowerCase() === "salesperson"
+            ? { ADMIN_ID: input.userId }
+            : undefined,
       });
 
       const safeAdmin = admin.map((a: Admin) => {

@@ -71,12 +71,16 @@ export default function EditCustomerPage() {
 
   useEffect(() => {
     const formattedData = data as Customer;
-    if (user?.ID !== formattedData?.ADMIN_ID && !isMasterAdmin(user?.ROLE)) {
+    if (
+      user?.ID !== formattedData?.ADMIN_ID &&
+      !isMasterAdmin(user?.ROLE) &&
+      !isLoading
+    ) {
       hasRedirected.current = true;
       toast.error("You are not authorized to edit this customer.");
       router.push("/user");
     }
-  }, [data, router, user]);
+  }, [data, router, user, isLoading]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,

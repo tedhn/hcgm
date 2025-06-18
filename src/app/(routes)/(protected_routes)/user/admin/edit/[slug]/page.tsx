@@ -56,11 +56,11 @@ const EditUserPage = () => {
   });
 
   useEffect(() => {
-    if (!isAdmin(user?.ROLE)) {
+    if (!isAdmin(user?.ROLE) && !isLoading) {
       toast.error("You are not authorized to edit this.");
       router.push("/user");
     }
-  }, [router, user]);
+  }, [router, user, isLoading]);
 
   useEffect(() => {
     if (data && !isLoading) {
