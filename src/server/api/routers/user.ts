@@ -224,9 +224,7 @@ export const userRouter = createTRPCRouter({
             });
           }
 
-          await ctx.db.transaction.deleteMany({
-            where: { ADMIN_ID: input.id },
-          });
+
 
           await ctx.db.admin.delete({
             where: { ID: input.id },
@@ -238,9 +236,7 @@ export const userRouter = createTRPCRouter({
         case "customer":
           // Delete the customer
 
-          await ctx.db.transaction.deleteMany({
-            where: { CUSTOMER_ID: input.id },
-          });
+
 
           await ctx.db.customer.delete({
             where: { ID: input.id },

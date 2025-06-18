@@ -41,7 +41,11 @@ const UserPage = () => {
   } = api.user.search.useMutation();
   const getCsv = api.user.getCsv.useQuery();
 
-  const deleteUserMutation = api.user.deleteUser.useMutation();
+  const deleteUserMutation = api.user.deleteUser.useMutation({
+    onSuccess: () => {
+      void utils.user.getAll.invalidate();
+    },
+  });
 
   const handleDelete = async (id: number, type: string) => {
     setShowModal(false);
@@ -50,12 +54,10 @@ const UserPage = () => {
     await toast.promise(promise, {
       loading: "Deleting...",
       success: "User deleted successfully",
-      error: (err: TRPCError) => {
-        return err.message;
+      error: () => {
+        return "User has active transactions. Please delete the transactions first.";
       },
     });
-
-    void utils.user.getAll.invalidate();
   };
 
   const adminColumns: ColumnDef<UserType>[] = [
