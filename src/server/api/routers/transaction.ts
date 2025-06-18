@@ -301,7 +301,7 @@ export const transactionRouter = createTRPCRouter({
     }),
 
   search: publicProcedure
-    .input(z.object({ query: z.string() }))
+    .input(z.object({ query: z.string(), id: z.number() }))
     .mutation(async ({ input, ctx }) => {
       const searchResults = await ctx.db.transaction.findMany({
         where: {
@@ -313,6 +313,7 @@ export const transactionRouter = createTRPCRouter({
               },
             },
           ],
+          ADMIN_ID: input.id,
         },
         include: {
           ADMIN: true,
@@ -330,6 +331,6 @@ export const transactionRouter = createTRPCRouter({
     const parser = new Parser();
     const csv = parser.parse(data);
 
-    return csv ; // We'll return as string
+    return csv; // We'll return as string
   }),
 });

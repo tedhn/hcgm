@@ -69,7 +69,7 @@ const ProductsPage = () => {
       setIsSearching(true);
     }
 
-    searchMutate({ query: value });
+    searchMutate({ query: value, id: user!.ID });
   };
 
   const handleExport = async () => {
