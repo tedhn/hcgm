@@ -44,6 +44,9 @@ const CreateAdminPage = () => {
 
       router.push("/user");
     },
+    onError: (err) => {
+      toast.error(err.message);
+    },
   });
 
   const isMobile = useIsMobile();
@@ -61,6 +64,7 @@ const CreateAdminPage = () => {
       return toast.error("Password should be 6 or more characters.");
     }
 
+
     await toast.promise(
       mutateAsync({
         name,
@@ -68,6 +72,7 @@ const CreateAdminPage = () => {
         password,
         phone: +phone,
         role: role.toUpperCase().replaceAll(" ", "_"),
+        region: region.toUpperCase().replaceAll(" ", ""),
         code,
       }),
       {

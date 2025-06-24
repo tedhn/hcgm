@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { type Admin } from "@prisma/client";
+import { type REGION, type Admin } from "@prisma/client";
 
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
@@ -117,6 +117,7 @@ export const userRouter = createTRPCRouter({
         phone: z.number(),
         role: z.string().min(1, "Invalid role"),
         code: z.string().min(1, "Invalid Code"),
+        region: z.string().min(1, "Invalid region"),
       }),
     )
 
@@ -144,6 +145,7 @@ export const userRouter = createTRPCRouter({
           PHONE: input.phone + "",
           ROLE: input.role,
           CODE: input.code,
+          REGION: input.region as REGION,
         },
       });
 
@@ -169,6 +171,7 @@ export const userRouter = createTRPCRouter({
         phone: z.number().min(10, "Phone number is invalid").optional(),
         role: z.string().min(1, "Invalid role").optional(),
         code: z.string().min(1, "Invalid Code").optional(),
+        region: z.string().min(1, "Invalid region").optional(),
       }),
     )
     .mutation(async ({ input, ctx }) => {
@@ -195,6 +198,7 @@ export const userRouter = createTRPCRouter({
       if (input.phone) updateData.PHONE = input.phone + "";
       if (input.role) updateData.ROLE = input.role;
       if (input.code) updateData.CODE = input.code;
+      if (input.region) updateData.REGION = input.region as REGION;
 
       // update the database using the user id
       const updatedUser = await ctx.db.admin.update({
@@ -224,8 +228,6 @@ export const userRouter = createTRPCRouter({
             });
           }
 
-
-
           await ctx.db.admin.delete({
             where: { ID: input.id },
           });
@@ -235,8 +237,6 @@ export const userRouter = createTRPCRouter({
           };
         case "customer":
           // Delete the customer
-
-
 
           await ctx.db.customer.delete({
             where: { ID: input.id },

@@ -10,7 +10,7 @@ export enum ROLE {
 
 export enum REGION {
   CENTRAL = "CENTRAL",
-  EASTCOAST = "EASTCOAST",
+  EAST_COAST = "EAST_COAST",
   SOUTH = "SOUTH",
   NORTH = "NORTH",
 }
@@ -26,6 +26,7 @@ export const Regions: DropDownType[] = [
   { id: 2, name: "East Coast" },
   { id: 3, name: "South" },
   { id: 4, name: "North" },
+  { id: 5, name: "All" },
 ];
 
 export const Category: DropDownType[] = [
@@ -37,7 +38,7 @@ export const Category: DropDownType[] = [
 
 export const REGION_LABELS: Record<REGION, string> = {
   [REGION.SOUTH]: "South",
-  [REGION.EASTCOAST]: "East Coast",
+  [REGION.EAST_COAST]: "East Coast",
   [REGION.NORTH]: "North",
   [REGION.CENTRAL]: "Central",
 };

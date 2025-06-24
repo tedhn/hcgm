@@ -101,7 +101,7 @@ model regional_forecast_mt {
 enum REGION {
   ALL
   SOUTH
-  EASTCOAST
+  EAST_COAST
   NORTH
   CENTRAL
 }

@@ -124,6 +124,8 @@ const UserPage = () => {
       cell: ({ row }) => {
         const outputText = REGION_LABELS[row.original.REGION as REGION] ?? "-";
 
+
+        
         return <div>{outputText}</div>;
       },
     },

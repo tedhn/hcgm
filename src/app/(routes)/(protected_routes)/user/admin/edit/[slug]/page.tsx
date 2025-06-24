@@ -4,7 +4,7 @@ import { useRouter, useParams } from "next/navigation";
 import React, { useEffect } from "react";
 import toast from "react-hot-toast";
 import BackButton from "~/app/_components/back-button";
-import { Roles } from "~/app/const";
+import { Regions, Roles } from "~/app/const";
 import { Button } from "~/components/ui/button";
 import InputWithLabel from "~/components/ui/input-with-label";
 import { Label } from "~/components/ui/label";
@@ -32,6 +32,7 @@ const EditUserPage = () => {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [role, setRole] = React.useState<string>("");
+  const [region, setRegion] = React.useState<string>("");
 
   const utils = api.useUtils();
   const type = window.location.pathname.includes("admin")
@@ -49,8 +50,9 @@ const EditUserPage = () => {
     data: editData,
   } = api.user.editAdmin.useMutation({
     onSuccess: () => {
-      void utils.user.getAll.invalidate();
-      void utils.user.getOne.invalidate();
+      void utils.user.invalidate();
+
+      router.push("/user");
       toast.success("Admin updated successfully!");
     },
   });
@@ -70,6 +72,14 @@ const EditUserPage = () => {
       setPhone(admin.PHONE);
       setEmail(admin.EMAIL);
       setPassword(admin.PASSWORD);
+      setRegion(
+        admin.REGION.replace("_", " ")
+          .toLowerCase()
+          .split(" ")
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" "),
+      );
+
       // setRole(admin.ROLE.replace("_", " ").);
 
       const role = Roles.find(
@@ -89,7 +99,6 @@ const EditUserPage = () => {
   }, [isPending, router, editData]);
 
   const handleEdit = () => {
-    console.log("edit", data?.ID);
     mutate({
       id: data!.ID,
       name,
@@ -97,6 +106,7 @@ const EditUserPage = () => {
       password,
       phone: +phone,
       role: role.toUpperCase().replaceAll(" ", "_"),
+      region: region.toUpperCase().replaceAll(" ", "_"),
       code,
     });
   };
@@ -130,11 +140,32 @@ const EditUserPage = () => {
           </Select>
         </div>
 
-        {/* <InputWithLabel
+        <div className="grid w-full max-w-sm items-center gap-1.5">
+          <Label>Region</Label>
+
+          <Select
+            value={region}
+            onValueChange={setRegion}
+            disabled={role.toLowerCase() !== "salesperson"}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Role Type" />
+            </SelectTrigger>
+            <SelectContent>
+              {Regions.map((item) => (
+                <SelectItem key={item.id} value={item.name}>
+                  {item.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <InputWithLabel
           label="Password"
           value={password}
           setValue={setPassword}
-        /> */}
+        />
 
         <Button className="w-fit" onClick={handleEdit}>
           Edit

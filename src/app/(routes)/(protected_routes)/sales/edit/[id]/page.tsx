@@ -30,7 +30,7 @@ import { Label } from "~/components/ui/label";
 import { Input } from "~/components/ui/input";
 import { CalendarIcon, Check, ChevronsUpDown, Trash2 } from "lucide-react";
 import { Button } from "~/components/ui/button";
-import { cn, isAdmin } from "~/lib/utils";
+import { cn, isAdmin, isMasterAdmin } from "~/lib/utils";
 import { Calendar } from "~/components/ui/calendar";
 import { useIsMobile } from "~/hooks/useMobile";
 import BackButton from "~/app/_components/back-button";
@@ -87,12 +87,15 @@ const EditSalesPage = () => {
   });
 
   useEffect(() => {
-    console.log(salesData, user);
-    if (user?.ID !== salesData?.ADMIN_ID && !isAdmin(user?.ROLE) && !isLoading) {
+    if (
+      user?.ID !== salesData?.ADMIN_ID &&
+      !isAdmin(user?.ROLE) &&
+      !isLoading
+    ) {
       toast.error("You are not authorized to edit this.");
       router.push("/sales");
     }
-  }, [salesData, router, user , isLoading]);
+  }, [salesData, router, user, isLoading]);
 
   // Prefill data when salesData arrives
   useEffect(() => {
@@ -425,21 +428,22 @@ const EditSalesPage = () => {
               </SelectContent>
             </Select>
           </div>
-
-          <div>
-            <Label>Status</Label>
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="PENDING">Pending</SelectItem>
-                <SelectItem value="APPROVED">Approved</SelectItem>
-                <SelectItem value="DELIVERED">Delivered</SelectItem>
-                <SelectItem value="CANCELLED">Cancelled</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {isMasterAdmin(user?.ROLE) && (
+            <div>
+              <Label>Status</Label>
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="PENDING">Pending</SelectItem>
+                  <SelectItem value="APPROVED">Approved</SelectItem>
+                  <SelectItem value="DELIVERED">Delivered</SelectItem>
+                  <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div>
             <Label>Commission</Label>
