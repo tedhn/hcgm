@@ -16,6 +16,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { calculateTotal } from "~/lib/utils";
+import { LoadingSpinner } from "~/components/ui/loader";
 
 export type ForecastRow = {
   id: number;
@@ -24,7 +25,7 @@ export type ForecastRow = {
   e_coast: number;
   south: number;
   north: number;
-  type: string;
+  type: "MT" | "COSTING";
 };
 
 function formatNumberWithCommas(value: number | string) {
@@ -42,14 +43,38 @@ const DashboardPage = () => {
     costing: Omit<ForecastRow, "type">[];
   }>();
 
+  const { data: sales, isLoading: isSalesLoading } =
+    api.dashboard.getCurrentSales.useQuery();
+
+  console.log(sales, forecast);
+
   const [localData, setLocalData] = useState<{
     mt: Omit<ForecastRow, "type">[];
     costing: Omit<ForecastRow, "type">[];
   }>({ mt: [], costing: [] });
+  const [localSalesData, setLocalSalesData] = useState<{
+    mt: Omit<ForecastRow, "type" | "id">[];
+    costing: Omit<ForecastRow, "type" | "id">[];
+  }>({ mt: [], costing: [] });
+
+  const [currentTab, setCurrenTab] = useState<string>("MT");
 
   useEffect(() => {
-    setLocalData(forecast ?? { mt: [], costing: [] });
+    if (forecast) {
+      setLocalData({
+        mt: forecast.mt.map((row) => ({ ...row, type: "MT" })),
+        costing: forecast.costing.map((row) => ({ ...row, type: "COSTING" })),
+      });
+    }
   }, [forecast]);
+  useEffect(() => {
+    if (sales) {
+      setLocalSalesData({
+        mt: sales.mt.map((row) => ({ ...row, type: "MT" })),
+        costing: sales.costing.map((row) => ({ ...row, type: "COSTING" })),
+      });
+    }
+  }, [sales]);
 
   const handleUpdateData = (data: ForecastRow, value: number, key: string) => {
     if (Number.isNaN(+value)) {
@@ -57,20 +82,14 @@ const DashboardPage = () => {
       return;
     }
 
-    const newData = localData.mt.map((item) => {
-      if (item.id === data.id) {
-        return { ...item, [key]: +value };
-      }
-      return { ...item, type: data.type };
-    });
+    const updatedRow = { ...data, [key]: +value };
+    const target = data.type === "MT" ? "mt" : "costing";
+    const newData = localData[target].map((item) =>
+      item.id === data.id ? updatedRow : item,
+    );
 
-    if (data.type === "MT") {
-      setLocalData({ ...localData, mt: newData });
-    } else if (data.type === "COSTING") {
-      setLocalData({ ...localData, costing: newData });
-    }
-
-    updateMutation.mutate({ ...data, [key]: +value });
+    setLocalData({ ...localData, [target]: newData });
+    updateMutation.mutate(updatedRow);
   };
 
   const forecastColumns: ColumnDef<ForecastRow>[] = [
@@ -85,20 +104,16 @@ const DashboardPage = () => {
       cell: ({ row }) => <div>{row.original.item_group || "-"}</div>,
       size: 150,
     },
-    ...["central", "e_coast", "south", "north"].map((key) => ({
+    ...(["central", "e_coast", "south", "north"] as const).map((key) => ({
       accessorKey: key.toUpperCase(),
       header: key.replace("_", " ").toUpperCase(),
       cell: ({ row }: { row: Row<ForecastRow> }) => {
-        const val = row.original[key as keyof ForecastRow] as
-          | number
-          | null
-          | undefined;
-        const isCosting = row.original.type === "COSTING";
+        const val = row.original[key];
         return (
           <div className="cursor-pointer">
             {val == null
               ? "-"
-              : isCosting
+              : row.original.type === "COSTING"
                 ? `RM ${formatNumberWithCommas(val / 1000)}k`
                 : formatNumberWithCommas(val)}
           </div>
@@ -106,7 +121,6 @@ const DashboardPage = () => {
       },
       size: 80,
     })),
-
     {
       accessorKey: "Total",
       header: "Total",
@@ -114,7 +128,6 @@ const DashboardPage = () => {
         const { central, e_coast, south, north, type } = row.original;
         const total =
           (central ?? 0) + (e_coast ?? 0) + (south ?? 0) + (north ?? 0);
-
         return (
           <div>
             {type === "COSTING"
@@ -126,102 +139,193 @@ const DashboardPage = () => {
     },
   ];
 
+  const renderChart = (
+    data: {
+      item_group: string;
+      central_forecast: number;
+      e_coast_forecast: number;
+      south_forecast: number;
+      north_forecast: number;
+      central_sales: number;
+      e_coast_sales: number;
+      south_sales: number;
+      north_sales: number;
+      type: string;
+    }[],
+  ) => {
+    return (
+      <div className="h-96 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart
+            data={data}
+            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="item_group" />
+            <YAxis
+              tickFormatter={(value: number) =>
+                value > 1000000 ? `${value / 1000000}M` : value.toLocaleString()
+              }
+            />
+            <Tooltip formatter={(value: number) => value.toLocaleString()} />
+            <Legend />
+
+            {/* Central */}
+            <Bar
+              dataKey="central_sales"
+              name="Central (Current)"
+              fill="#8884d8"
+              stackId={"sales"}
+            />
+            <Bar
+              dataKey="central_forecast"
+              name="Central (Forecast)"
+              stackId={"forecast"}
+              fill="#4e79a7"
+            />
+
+            {/* East Coast */}
+            <Bar
+              dataKey="e_coast_sales"
+              stackId={"sales"}
+              name="E Coast (Current)"
+              fill="#82ca9d"
+            />
+            <Bar
+              dataKey="e_coast_forecast"
+              name="E Coast (Forecast)"
+              stackId={"forecast"}
+              fill="#59c18f"
+            />
+
+            {/* South */}
+            <Bar
+              dataKey="south_sales"
+              stackId={"sales"}
+              name="South (Current)"
+              fill="#ffc658"
+            />
+            <Bar
+              dataKey="south_forecast"
+              name="South (Forecast)"
+              stackId={"forecast"}
+              fill="#fcbf49"
+            />
+
+            {/* North */}
+            <Bar
+              dataKey="north_sales"
+              stackId={"sales"}
+              name="North (Current)"
+              fill="#ff8042"
+            />
+            <Bar
+              dataKey="north_forecast"
+              name="North (Forecast)"
+              stackId={"forecast"}
+              fill="#fd7e14"
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  };
+
   return (
     <div className="w-full px-0 py-4 lg:px-4">
       <h1 className="mb-6 text-3xl">Forecast</h1>
 
-      <Tabs defaultValue="weight" className="w-full">
+      <Tabs value={currentTab} onValueChange={setCurrenTab} className="w-full">
         <TabsList className="mb-4">
-          <TabsTrigger value="weight">Weights</TabsTrigger>
-          <TabsTrigger value="currency">Currency</TabsTrigger>
+          <TabsTrigger value="MT">Weights</TabsTrigger>
+          <TabsTrigger value="COSTING">Currency</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="weight">
+        <TabsContent value="MT">
           <section className="space-y-4 rounded-md p-4">
             <h2
               className="mb-4 text-xl font-semibold"
               style={{ color: "#254336" }}
             >
-              Weights
+              Forecast (MT)
             </h2>
             <EditableDataTable
               columns={forecastColumns}
               data={calculateTotal(
-                localData.mt.map((row) => ({ ...row, type: "MT" })),
+                localData.mt.map((item) => ({ ...item, type: "MT" })),
               )}
               isLoading={isLoading}
               onDataChange={handleUpdateData}
               setLocalData={setLocalData}
             />
+            {localSalesData?.mt
+              ? renderChart(
+                  localData.mt.map((item) => {
+                    const salesMT = localSalesData.mt.find(
+                      (mt) => mt.item_group === item.item_group,
+                    );
 
-            <div className="h-96 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={localData.mt}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="item_group" />
-                  <YAxis
-                    tickFormatter={(value: number) => value.toLocaleString()}
-                  />
-                  <Tooltip
-                    formatter={(value: number) => value.toLocaleString()}
-                  />
-                  <Legend />
-                  <Bar dataKey="central" fill="#8884d8" />
-                  <Bar dataKey="e_coast" fill="#82ca9d" />
-                  <Bar dataKey="south" fill="#ffc658" />
-                  <Bar dataKey="north" fill="#ff8042" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+                    const newItems = {
+                      item_group: item.item_group,
+                      central_forecast: item.central,
+                      e_coast_forecast: item.e_coast,
+                      south_forecast: item.south,
+                      north_forecast: item.north,
+                      central_sales: salesMT?.central ?? 0,
+                      e_coast_sales: salesMT?.e_coast ?? 0,
+                      south_sales: salesMT?.south ?? 0,
+                      north_sales: salesMT?.north ?? 0,
+                      type: "MT",
+                    };
+
+                    return newItems;
+                  }),
+                )
+              : null}
           </section>
         </TabsContent>
 
-        <TabsContent value="currency">
-          {" "}
+        <TabsContent value="COSTING">
           <section className="space-y-4 rounded-md p-4">
             <h2
               className="mb-4 text-xl font-semibold"
               style={{ color: "#254336" }}
             >
-              Cost
+              Costing (RM)
             </h2>
             <EditableDataTable
               columns={forecastColumns}
               data={calculateTotal(
-                localData.costing.map((row) => ({ ...row, type: "COSTING" })),
+                localData.costing.map((item) => ({ ...item, type: "COSTING" })),
               )}
               isLoading={isLoading}
               onDataChange={handleUpdateData}
               setLocalData={setLocalData}
             />
+            {localSalesData?.costing
+              ? renderChart(
+                  localData.costing.map((item) => {
+                    const salesCosting = localSalesData.costing.find(
+                      (costing) => costing.item_group === item.item_group,
+                    );
 
-            <div className="h-96 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={localData.costing}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="item_group" />
-                  <YAxis
-                    tickFormatter={(value: number) =>
-                      `${(value / 1000000).toFixed(0)}m`
-                    }
-                  />
-                  <Tooltip
-                    formatter={(value: number) => value.toLocaleString()}
-                  />
-                  <Legend />
-                  <Bar dataKey="central" fill="#8884d8" />
-                  <Bar dataKey="e_coast" fill="#82ca9d" />
-                  <Bar dataKey="south" fill="#ffc658" />
-                  <Bar dataKey="north" fill="#ff8042" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+                    const newItems = {
+                      item_group: item.item_group,
+                      central_forecast: item.central,
+                      e_coast_forecast: item.e_coast,
+                      south_forecast: item.south,
+                      north_forecast: item.north,
+                      central_sales: salesCosting?.central ?? 0,
+                      e_coast_sales: salesCosting?.e_coast ?? 0,
+                      south_sales: salesCosting?.south ?? 0,
+                      north_sales: salesCosting?.north ?? 0,
+                      type: "COSTING",
+                    };
+
+                    return newItems;
+                  }),
+                )
+              : null}
           </section>
         </TabsContent>
       </Tabs>
