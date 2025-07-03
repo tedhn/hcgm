@@ -205,7 +205,7 @@ export const transactionRouter = createTRPCRouter({
       // Step 7: Send email
       await resend.emails.send({
         from: "Acme <onboarding@resend.dev>",
-        to: ["heinhtetnaing186@gmail.com"],
+        to: ["'huachangtesting@gmail.com'"],
         subject: `New Sales ${transaction.ID}`,
         react: EmailTemplate({ sales: transaction }),
       });
@@ -305,7 +305,7 @@ export const transactionRouter = createTRPCRouter({
       if (existingTransaction.STATUS !== input.status) {
         await resend.emails.send({
           from: "Acme <onboarding@resend.dev>",
-          to: ["heinhtetnaing186@gmail.com"],
+          to: ["'huachangtesting@gmail.com'"],
           subject: `Updated Sales Status : ${updatedTransaction.ID}`,
           react: EmailTemplate({ sales: updatedTransaction }),
         });
