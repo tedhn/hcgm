@@ -6,7 +6,7 @@ import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { EmailTemplate } from "~/app/_components/email-template";
 import { Resend } from "resend";
-import { FieldInfo, Parser } from "json2csv";
+import type { FieldInfo, Parser } from "json2csv";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -205,7 +205,7 @@ export const transactionRouter = createTRPCRouter({
       // Step 7: Send email
       await resend.emails.send({
         from: "Acme <onboarding@resend.dev>",
-        to: ["'huachangtesting@gmail.com'"],
+        to: "huachangtesting@gmail.com",
         subject: `New Sales ${transaction.ID}`,
         react: EmailTemplate({ sales: transaction }),
       });
@@ -305,7 +305,7 @@ export const transactionRouter = createTRPCRouter({
       if (existingTransaction.STATUS !== input.status) {
         await resend.emails.send({
           from: "Acme <onboarding@resend.dev>",
-          to: ["'huachangtesting@gmail.com'"],
+          to: "huachangtesting@gmail.com",
           subject: `Updated Sales Status : ${updatedTransaction.ID}`,
           react: EmailTemplate({ sales: updatedTransaction }),
         });
