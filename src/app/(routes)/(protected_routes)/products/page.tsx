@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 "use client";
 
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef, Row } from "@tanstack/react-table";
 import React, { useRef, useState } from "react";
 import { DataTable } from "~/app/_components/data-table";
 import { api } from "~/trpc/react";
@@ -15,12 +17,15 @@ import { Dialog } from "~/components/ui/dialog";
 import DeleteModal from "~/app/_components/DeleteModal";
 import toast from "react-hot-toast";
 import * as XLSX from "xlsx";
+import { isAdmin } from "~/lib/utils";
+import { useUserStore } from "~/lib/store/useUserStore";
 
 const ProductsPage = () => {
   const current_path = usePathname();
   const router = useRouter();
   const utils = api.useUtils();
 
+  const { user } = useUserStore();
   const [isSearching, setIsSearching] = useState(false);
 
   const [selectedRow, setSelectedRow] = useState<string>("");
@@ -61,7 +66,6 @@ const ProductsPage = () => {
 
   const productColumns: ColumnDef<ProductType>[] = [
     {
-      // accessorKey: "id",
       header: "#",
       cell: ({ row }) => row.index + 1,
       size: 50,
@@ -72,14 +76,11 @@ const ProductsPage = () => {
       size: 120,
     },
     {
-      accessorKey: "name",
+      accessorKey: "NAME",
       header: "Name",
       cell: ({ row }) => {
         const name = row.original.NAME;
-
-        const outputText = name ?? "-";
-
-        return <div>{outputText}</div>;
+        return <div>{name ?? "-"}</div>;
       },
       size: 320,
     },
@@ -88,10 +89,7 @@ const ProductsPage = () => {
       header: "Category",
       cell: ({ row }) => {
         const category = row.original.CATEGORY;
-
-        const outputText = category ?? "-";
-
-        return <div>{outputText}</div>;
+        return <div>{category ?? "-"}</div>;
       },
     },
     {
@@ -99,66 +97,52 @@ const ProductsPage = () => {
       header: "Base UOM",
       cell: ({ row }) => {
         const base_uom = row.original.BASE_UOM;
-
-        const outputText = base_uom ?? "-";
-
-        return <div>{outputText}</div>;
+        return <div>{base_uom ?? "-"}</div>;
       },
       size: 80,
     },
-    // {
-    //   accessorKey: "UNIT_PRICE",
-    //   header: "Unit Price",
-    //   cell: ({ row }) => {
-    //     const role = row.original.UNIT_PRICE;
-
-    //     const outputText = role ?? "-";
-
-    //     return <div>{outputText}</div>;
-    //   },
-    //   size: 80,
-    // },
     {
       accessorKey: "STOCK",
       header: "Stock",
       cell: ({ row }) => {
         const stock = row.original.STOCK;
-
-        const outputText = stock ?? "-";
-
-        return <div>{outputText}</div>;
+        return <div>{stock ?? "-"}</div>;
       },
       size: 80,
     },
-    {
-      id: "actions",
-      size: 40,
-      cell: ({ row }) => {
-        return (
-          <div className="flex items-center justify-center">
-            <Button
-              variant="ghost"
-              className="text-blue-500 focus:bg-blue-500/10 focus:text-blue-500"
-              onClick={() =>
-                router.push(current_path + `/edit/${row.original.CODE}`)
-              }
-            >
-              <Pencil className="h-2 w-2" />
-            </Button>
-            <Button
-              variant="ghost"
-              className="text-red-500 focus:bg-red-500/10 focus:text-red-500"
-              onClick={() => {
-                setSelectedRow(row.original.CODE);
-                setShowModal(true);
-              }}
-            >
-              <Trash className="h-2 w-2" />
-            </Button>
-          </div>
-        );
-      },
-    },
+    // Conditionally add the actions column
+    ...(isAdmin(user?.ROLE)
+      ? [
+          {
+            id: "actions",
+            header: "",
+            size: 40,
+            cell: ({ row }: { row: Row<ProductType> }) => (
+              <div className="flex items-center justify-center gap-1">
+                <Button
+                  variant="ghost"
+                  className="text-blue-500 focus:bg-blue-500/10 focus:text-blue-500"
+                  onClick={() =>
+                    router.push(current_path + `/edit/${row.original.CODE}`)
+                  }
+                >
+                  <Pencil className="h-2 w-2" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="text-red-500 focus:bg-red-500/10 focus:text-red-500"
+                  onClick={() => {
+                    setSelectedRow(row.original.CODE);
+                    setShowModal(true);
+                  }}
+                >
+                  <Trash className="h-2 w-2" />
+                </Button>
+              </div>
+            ),
+          },
+        ]
+      : []),
   ];
 
   const handleSearch = (value: string) => {
@@ -201,6 +185,32 @@ const ProductsPage = () => {
 
       const sheetName = workbook.SheetNames[0]!;
       const sheet = workbook.Sheets[sheetName]!;
+
+      // Check required headers
+      const headerRow = XLSX.utils.sheet_to_json<string[]>(sheet, {
+        header: 1,
+        range: 0,
+      })[0];
+
+      const requiredHeaders = [
+        "Item Code",
+        "Description",
+        "Item Category",
+        "Base UOM",
+        "Balance Qty",
+      ];
+
+      const missingHeaders = requiredHeaders.filter(
+        (h) => !headerRow?.includes(h),
+      );
+
+      if (missingHeaders.length > 0) {
+        toast.error(
+          `Missing header(s): ${missingHeaders.join(", ")}. Please fix your Excel file.`,
+        );
+        return;
+      }
+
       const rawJson =
         XLSX.utils.sheet_to_json<Record<string, string | number>>(sheet);
 
