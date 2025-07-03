@@ -45,10 +45,10 @@ const CreateSalesPage = () => {
   const [customerId, setCustomerId] = React.useState<string>("");
   const [openCustomerComboBox, setOpenCustomerComboBox] = React.useState(false);
 
-  const [productId, setProductId] = React.useState<string | null>(null);
+  const [productCode, setProductCode] = React.useState<string | null>(null);
   const [productArr, setProductArr] = React.useState<Product[]>([]);
   const [productDetails, setProductDetails] = React.useState<
-    { quantity: string; price: string; name: string; id: string }[]
+    { quantity: string; price: string; name: string; code: string }[]
   >([]);
 
   const [openProductComboBox, setOpenProductComboBox] = React.useState(false);
@@ -123,9 +123,9 @@ const CreateSalesPage = () => {
     setOpenConfirmModal(true);
   };
 
-  const removeProduct = (id: number) => {
-    setProductArr((prev) => prev.filter((p) => p.ID !== id));
-    setProductDetails((prev) => prev.filter((p) => +p.id !== id));
+  const removeProduct = (code: string) => {
+    setProductArr((prev) => prev.filter((p) => p.CODE !== code));
+    setProductDetails((prev) => prev.filter((p) => p.code !== code));
   };
 
   return (
@@ -215,8 +215,8 @@ const CreateSalesPage = () => {
                   role="combobox"
                   className="w-full justify-between"
                 >
-                  {productId
-                    ? productData?.find((c) => c.ID === +productId)?.NAME
+                  {productCode
+                    ? productData?.find((c) => c.CODE === productCode)?.NAME
                     : "Select product..."}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
@@ -230,15 +230,15 @@ const CreateSalesPage = () => {
                       {productData
                         ?.filter(
                           (p) =>
-                            !productDetails.some((pd) => pd.id === p.ID + ""),
+                            !productDetails.some((pd) => pd.code === p.CODE + ""),
                         )
                         .map((product) => (
                           <CommandItem
-                            key={product.ID}
-                            value={product.ID + ""}
+                            key={product.CODE}
+                            value={product.CODE + ""}
                             onSelect={(currentValue) => {
                               const product = productData?.find(
-                                (c) => c.ID === +currentValue,
+                                (c) => c.CODE === currentValue,
                               );
                               if (!product) return;
 
@@ -249,10 +249,10 @@ const CreateSalesPage = () => {
                                   quantity: "",
                                   price: "",
                                   name: product.NAME,
-                                  id: product.ID + "",
+                                  code: product.CODE + "",
                                 },
                               ]);
-                              setProductId(currentValue);
+                              setProductCode(currentValue);
                               setOpenProductComboBox(false);
                             }}
                           >
@@ -287,7 +287,7 @@ const CreateSalesPage = () => {
                     <tbody>
                       {productArr.map((product, index) => (
                         <tr
-                          key={product.ID}
+                          key={product.CODE}
                           className="border-b hover:bg-muted/50"
                         >
                           <td className="p-3">{product.NAME}</td>
@@ -297,7 +297,7 @@ const CreateSalesPage = () => {
                               placeholder="Quantity"
                               className={cn(
                                 "h-9",
-                                stockErrors[product.ID] && "border-red-500",
+                                stockErrors[product.CODE] && "border-red-500",
                               )}
                               value={productDetails[index]?.quantity}
                               onBlur={(e) => {
@@ -318,9 +318,9 @@ const CreateSalesPage = () => {
                                 setStockErrors((prev) => {
                                   const newErrors = { ...prev };
                                   if (errorMessage) {
-                                    newErrors[product.ID] = errorMessage;
+                                    newErrors[product.CODE] = errorMessage;
                                   } else {
-                                    delete newErrors[product.ID];
+                                    delete newErrors[product.CODE];
                                   }
                                   return newErrors;
                                 });
@@ -336,9 +336,9 @@ const CreateSalesPage = () => {
                                 });
                               }}
                             />
-                            {stockErrors[product.ID] && (
+                            {stockErrors[product.CODE] && (
                               <p className="mt-1 text-xs text-red-600">
-                                {stockErrors[product.ID]}
+                                {stockErrors[product.CODE]}
                               </p>
                             )}
                           </td>
@@ -366,7 +366,7 @@ const CreateSalesPage = () => {
                             <Button
                               variant="destructive"
                               size="icon"
-                              onClick={() => removeProduct(product.ID)}
+                              onClick={() => removeProduct(product.CODE)}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>

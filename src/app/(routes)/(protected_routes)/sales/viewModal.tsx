@@ -1,4 +1,7 @@
-// React dialog component to display detailed sales information
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
 import { format } from "date-fns";
 import {
@@ -135,6 +138,27 @@ const SalesDetailsDialog: React.FC<SalesDetailsDialogProps> = ({
               </CardContent>
             </Card>
 
+            {data?.remarks && data?.remarks.length > 0 && (
+              <Card className="mt-4">
+                <CardHeader>
+                  <CardTitle>Remarks History</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {data.remarks.map(({ id, createdAt, message }) => (
+                    <div
+                      key={id}
+                      className="rounded border-l-4 border-blue-500 bg-blue-50 py-2 pl-3"
+                    >
+                      <div className="text-sm text-gray-700">{message}</div>
+                      <div className="text-xs text-gray-500">
+                        {format(new Date(createdAt), "PPPpp")}
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
             <Card>
               <CardHeader>
                 <CardTitle>Other Information</CardTitle>
@@ -157,9 +181,7 @@ const SalesDetailsDialog: React.FC<SalesDetailsDialogProps> = ({
                   <strong>Commission:</strong>{" "}
                   {data!.COMISSION ? `${data!.COMISSION}%` : "-"}
                 </div>
-                <div>
-                  <strong>Remarks:</strong> {data!.REMARK ?? "-"}
-                </div>
+
                 <div>
                   <strong>Delivery Location:</strong> {data!.LOCATION ?? "-"}
                 </div>

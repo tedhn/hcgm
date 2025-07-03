@@ -25,7 +25,7 @@ interface ConfirmSalesModalProps {
     quantity: string;
     price: string;
     name: string;
-    id: string;
+    code: string;
   }[];
   totalPrice: string;
   docNumber: string;
@@ -84,7 +84,7 @@ const ConfirmSalesModal: React.FC<ConfirmSalesModalProps> = ({
       remark: remarks,
       deliveryLocation: deliveryLocation,
       products: productDetails.map((p) => ({
-        id: Number(p.id),
+        code: p.code,
         quantity: Number(p.quantity),
         price: Number(p.price),
       })),
@@ -141,7 +141,7 @@ const ConfirmSalesModal: React.FC<ConfirmSalesModalProps> = ({
                     <tbody>
                       {productDetails.map((product) => (
                         <tr
-                          key={product.id}
+                          key={product.code}
                           className="border-b hover:bg-muted/50"
                         >
                           <td className="p-3">{product.name}</td>

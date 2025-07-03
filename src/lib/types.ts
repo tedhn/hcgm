@@ -64,7 +64,7 @@ export interface SalesType extends TransactionType {
 export type TransactionDetailType = {
   ID: number;
   TRANSACTION_ID: number;
-  PRODUCT_ID: number;
+  PRODUCT_CODE: string;
   QTY: number;
   UNIT_PRICE: number;
 };

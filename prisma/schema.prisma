@@ -51,22 +51,23 @@ model Product {
 }
 
 model Transaction {
-  ID                Int                 @id @default(autoincrement())
-  DOC_NUM           String              @default("")
-  TRANSACTION_DATE  DateTime            @default(now()) @db.Timestamptz(6)
-  CUSTOMER_ID       Int
-  ADMIN_ID          Int
-  TOTAL_PRICE       Float               @default(0)
-  REF_DOC_NO        String?             @default("")
-  DELIVERY_DATE     DateTime?
-  SHIPPING_METHOD   String?             @default("")
-  COMISSION         Float?              @default(0)
-  REMARK            String?             @default("")
-  STATUS            String              @default("")
-  LOCATION          String
+  ID               Int       @id @default(autoincrement())
+  DOC_NUM          String    @default("")
+  TRANSACTION_DATE DateTime  @default(now()) @db.Timestamptz(6)
+  CUSTOMER_ID      Int
+  ADMIN_ID         Int
+  TOTAL_PRICE      Float     @default(0)
+  REF_DOC_NO       String?   @default("")
+  DELIVERY_DATE    DateTime?
+  SHIPPING_METHOD  String?   @default("")
+  COMISSION        Float?    @default(0)
+  STATUS           String    @default("")
+  LOCATION         String
+
   ADMIN             Admin               @relation(fields: [ADMIN_ID], references: [ID])
   CUSTOMER          Customer            @relation(fields: [CUSTOMER_ID], references: [ID])
   TransactionDetail TransactionDetail[]
+  remarks           Remark[] 
 }
 
 model TransactionDetail {
@@ -77,6 +78,14 @@ model TransactionDetail {
   UNIT_PRICE     Float
   PRODUCT        Product     @relation(fields: [PRODUCT_CODE], references: [CODE])
   TRANSACTION    Transaction @relation(fields: [TRANSACTION_ID], references: [ID])
+}
+
+model Remark {
+  id            Int         @id @default(autoincrement())
+  message       String
+  createdAt     DateTime    @default(now())
+  transaction   Transaction @relation(fields: [transactionId], references: [ID])
+  transactionId Int
 }
 
 model regional_forecast_costing {

@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 "use client";
 import React, { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -23,7 +26,7 @@ import {
   CommandItem,
   CommandList,
 } from "~/components/ui/command";
-import type { Product } from "@prisma/client";
+import type { Product, Remark } from "@prisma/client";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { format } from "date-fns";
 import { Label } from "~/components/ui/label";
@@ -53,10 +56,10 @@ const EditSalesPage = () => {
   const [customerId, setCustomerId] = React.useState<string>("");
   const [openCustomerComboBox, setOpenCustomerComboBox] = React.useState(false);
 
-  const [productId, setProductId] = React.useState<string | null>(null);
+  const [productCode, setProductCode] = React.useState<string | null>(null);
   const [productArr, setProductArr] = React.useState<Product[]>([]);
   const [productDetails, setProductDetails] = React.useState<
-    { quantity: string; price: string; name: string; id: string }[]
+    { quantity: string; price: string; name: string; code: string }[]
   >([]);
 
   const [openProductComboBox, setOpenProductComboBox] = React.useState(false);
@@ -68,7 +71,8 @@ const EditSalesPage = () => {
   );
   const [shippingMethod, setShippingMethod] = React.useState("");
   const [commission, setCommission] = React.useState("");
-  const [remarks, setRemarks] = React.useState("");
+  const [remarks, setRemarks] = React.useState<Remark[]>([]);
+  const [newRemark, setNewRemark] = React.useState("");
   const [status, setStatus] = React.useState("");
   const [deliveryLocation, setDeliveryLocation] = React.useState("");
 
@@ -106,20 +110,22 @@ const EditSalesPage = () => {
       setDeliveryDate(new Date(salesData.DELIVERY_DATE!));
       setShippingMethod(salesData.SHIPPING_METHOD ?? "");
       setCommission(salesData.COMISSION ? salesData.COMISSION.toString() : "");
-      setRemarks(salesData.REMARK ?? "");
+      setRemarks(salesData.remarks ?? []);
       setStatus(salesData.STATUS);
       setProductDetails(
         salesData.PRODUCTS.map((product) => ({
           quantity: product.QTY.toString(),
           price: product.UNIT_PRICE.toString(),
           name:
-            productData.find((p) => p.ID === product.PRODUCT_ID)?.NAME ?? "",
-          id: product.PRODUCT_ID.toString(),
+            productData.find((p) => p.CODE === product.PRODUCT_CODE)?.NAME ??
+            "",
+          code: product.PRODUCT_CODE.toString(),
         })),
       );
       setProductArr(
         salesData.PRODUCTS.map(
-          (product) => productData.find((p) => p.ID === product.PRODUCT_ID)!,
+          (product) =>
+            productData.find((p) => p.CODE === product.PRODUCT_CODE)!,
         ),
       );
       setDeliveryLocation(salesData.LOCATION ?? "");
@@ -143,10 +149,10 @@ const EditSalesPage = () => {
         : new Date().toISOString(),
       shipping_method: shippingMethod,
       comission: +commission,
-      remark: remarks,
+      remark: newRemark,
 
       products: productDetails.map((p) => ({
-        id: Number(p.id),
+        code: p.code,
         quantity: Number(p.quantity),
         price: Number(p.price),
       })),
@@ -157,9 +163,9 @@ const EditSalesPage = () => {
     editSales(salesData);
   };
 
-  const removeProduct = (id: number) => {
-    setProductArr((prev) => prev.filter((p) => p.ID !== id));
-    setProductDetails((prev) => prev.filter((p) => +p.id !== id));
+  const removeProduct = (code: string) => {
+    setProductArr((prev) => prev.filter((p) => p.CODE !== code));
+    setProductDetails((prev) => prev.filter((p) => p.code !== code));
   };
 
   if (isLoading) return <div>Loading...</div>;
@@ -252,8 +258,8 @@ const EditSalesPage = () => {
                   role="combobox"
                   className="w-full justify-between"
                 >
-                  {productId
-                    ? productData?.find((c) => c.ID === +productId)?.NAME
+                  {productCode
+                    ? productData?.find((c) => c.CODE === productCode)?.NAME
                     : "Select product..."}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
@@ -267,15 +273,17 @@ const EditSalesPage = () => {
                       {productData
                         ?.filter(
                           (p) =>
-                            !productDetails.some((pd) => pd.id === p.ID + ""),
+                            !productDetails.some(
+                              (pd) => pd.code === p.CODE + "",
+                            ),
                         )
                         .map((product) => (
                           <CommandItem
-                            key={product.ID}
-                            value={product.ID + ""}
+                            key={product.CODE}
+                            value={product.CODE + ""}
                             onSelect={(currentValue) => {
                               const product = productData?.find(
-                                (c) => c.ID === +currentValue,
+                                (c) => c.CODE === currentValue,
                               );
                               if (!product) return;
 
@@ -286,10 +294,10 @@ const EditSalesPage = () => {
                                   quantity: "",
                                   price: "",
                                   name: product.NAME,
-                                  id: product.ID + "",
+                                  code: product.CODE,
                                 },
                               ]);
-                              setProductId(currentValue);
+                              setProductCode(currentValue);
                               setOpenProductComboBox(false);
                             }}
                           >
@@ -324,7 +332,7 @@ const EditSalesPage = () => {
                     <tbody>
                       {productArr.map((product, index) => (
                         <tr
-                          key={product.ID}
+                          key={product.CODE}
                           className="border-b hover:bg-muted/50"
                         >
                           <td className="p-3">{product.NAME}</td>
@@ -370,7 +378,7 @@ const EditSalesPage = () => {
                             <Button
                               variant="destructive"
                               size="icon"
-                              onClick={() => removeProduct(product.ID)}
+                              onClick={() => removeProduct(product.CODE)}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -454,12 +462,20 @@ const EditSalesPage = () => {
             />
           </div>
 
+          <div className="flex flex-col gap-2 py-2">
+            <Label>Previous Remarks</Label>
+            {remarks.map((r) => (
+              <Label key={r.id}>{r.message}</Label>
+            ))}
+          </div>
+
           <div>
             <Label>Remarks</Label>
+
             <Input
               placeholder="Enter remarks"
-              value={remarks}
-              onChange={(e) => setRemarks(e.target.value)}
+              value={newRemark}
+              onChange={(e) => setNewRemark(e.target.value)}
             />
           </div>
           <div>
