@@ -26,6 +26,9 @@ export const transactionRouter = createTRPCRouter({
           CUSTOMER: true,
           TransactionDetail: true,
         },
+        orderBy: {
+          TRANSACTION_DATE: "desc",
+        },
       });
 
       return sales;
@@ -57,7 +60,7 @@ export const transactionRouter = createTRPCRouter({
       const products = await Promise.all(
         details.map(async (detail) => {
           const product = await ctx.db.product.findUnique({
-            where: { ID: detail.PRODUCT_ID },
+            where: { CODE: detail.PRODUCT_CODE },
           });
 
           return { ...detail, NAME: product?.NAME };
@@ -89,7 +92,11 @@ export const transactionRouter = createTRPCRouter({
         remark: z.string().optional(),
         deliveryLocation: z.string(),
         products: z.array(
-          z.object({ id: z.number(), quantity: z.number(), price: z.number() }),
+          z.object({
+            code: z.string(),
+            quantity: z.number(),
+            price: z.number(),
+          }),
         ),
       }),
     )
@@ -97,14 +104,14 @@ export const transactionRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       // Step 1: Check stock availability for each product
       const insufficientStock: {
-        id: number;
+        code: string;
         requested: number;
         available: number;
       }[] = [];
 
       for (const product of input.products) {
         const existingProduct = await ctx.db.product.findUnique({
-          where: { ID: product.id },
+          where: { CODE: product.code },
           select: { STOCK: true },
         });
 
@@ -112,7 +119,7 @@ export const transactionRouter = createTRPCRouter({
 
         if (product.quantity > available) {
           insufficientStock.push({
-            id: product.id,
+            code: product.code,
             requested: product.quantity,
             available,
           });
@@ -125,7 +132,7 @@ export const transactionRouter = createTRPCRouter({
           `Insufficient stock for product(s): ${insufficientStock
             .map(
               (p) =>
-                `Product ID ${p.id} (requested: ${p.requested}, available: ${p.available})`,
+                `Product ID ${p.code} (requested: ${p.requested}, available: ${p.available})`,
             )
             .join(", ")}`,
         );
@@ -152,7 +159,7 @@ export const transactionRouter = createTRPCRouter({
         await ctx.db.transactionDetail.createManyAndReturn({
           data: input.products.map((product) => ({
             TRANSACTION_ID: transactions.ID,
-            PRODUCT_ID: product.id,
+            PRODUCT_CODE: product.code,
             QTY: product.quantity,
             UNIT_PRICE: product.price,
           })),
@@ -160,7 +167,7 @@ export const transactionRouter = createTRPCRouter({
 
       for (const product of input.products) {
         await ctx.db.product.update({
-          where: { ID: product.id },
+          where: { CODE: product.code },
           data: {
             STOCK: {
               decrement: product.quantity,
@@ -204,7 +211,11 @@ export const transactionRouter = createTRPCRouter({
           .min(0, "Commission must be a non-negative number"),
         remark: z.string().optional(),
         products: z.array(
-          z.object({ id: z.number(), quantity: z.number(), price: z.number() }),
+          z.object({
+            code: z.string(),
+            quantity: z.number(),
+            price: z.number(),
+          }),
         ),
         deliveryLocation: z.string(),
         status: z.string().min(1, "Status is required"),
@@ -235,6 +246,7 @@ export const transactionRouter = createTRPCRouter({
           REMARK: input.remark,
           LOCATION: input.deliveryLocation,
           STATUS: input.status, // You can modify this status if needed
+          TRANSACTION_DATE: new Date(),
         },
       });
 
@@ -248,7 +260,7 @@ export const transactionRouter = createTRPCRouter({
         await ctx.db.transactionDetail.createMany({
           data: input.products.map((product) => ({
             TRANSACTION_ID: updatedTransaction.ID,
-            PRODUCT_ID: product.id,
+            PRODUCT_CODE: product.code,
             QTY: product.quantity,
             UNIT_PRICE: product.price,
           })),
@@ -329,8 +341,10 @@ export const transactionRouter = createTRPCRouter({
     const data = await ctx.db.transaction.findMany();
 
     const parser = new Parser();
-    const csv = parser.parse(data);
 
-    return csv; // We'll return as string
+    // Always return at least headers
+    const csv = parser.parse(data.length > 0 ? data : []);
+
+    return csv;
   }),
 });

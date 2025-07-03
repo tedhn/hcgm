@@ -31,7 +31,6 @@ export type CustomerType = {
 };
 
 export type ProductType = {
-  ID: number;
   CODE: string;
   NAME: string;
   CATEGORY: string;

@@ -16,7 +16,6 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { calculateTotal } from "~/lib/utils";
-import { LoadingSpinner } from "~/components/ui/loader";
 
 export type ForecastRow = {
   id: number;

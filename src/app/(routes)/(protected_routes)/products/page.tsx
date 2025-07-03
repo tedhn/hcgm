@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { DataTable } from "~/app/_components/data-table";
 import { api } from "~/trpc/react";
 
@@ -13,6 +14,7 @@ import SearchBar from "~/app/_components/search-bar";
 import { Dialog } from "~/components/ui/dialog";
 import DeleteModal from "~/app/_components/DeleteModal";
 import toast from "react-hot-toast";
+import * as XLSX from "xlsx";
 
 const ProductsPage = () => {
   const current_path = usePathname();
@@ -21,8 +23,10 @@ const ProductsPage = () => {
 
   const [isSearching, setIsSearching] = useState(false);
 
-  const [selectedRow, setSelectedRow] = useState<number>(0);
+  const [selectedRow, setSelectedRow] = useState<string>("");
   const [showModal, setShowModal] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const { data: productData, isLoading } = api.product.getAll.useQuery();
   const getCsv = api.product.getCsv.useQuery();
@@ -37,15 +41,21 @@ const ProductsPage = () => {
       void utils.product.getAll.invalidate();
     },
   });
+  const importMutation = api.product.import.useMutation({
+    onSuccess: () => {
+      void utils.product.getAll.invalidate();
+    },
+  });
 
-  const handleDelete = async (id: number) => {
-    setSelectedRow(0);
+  const handleDelete = async (code: string) => {
+    setSelectedRow("");
     setShowModal(false);
 
-    await toast.promise(deleteMutation.mutateAsync({ id }), {
+    await toast.promise(deleteMutation.mutateAsync({ code }), {
       loading: "Deleting...",
       success: "Product deleted successfully",
-      error: "Poduct has active transactions. Please delete the transactions first.",
+      error:
+        "Poduct has active transactions. Please delete the transactions first.",
     });
   };
 
@@ -96,19 +106,18 @@ const ProductsPage = () => {
       },
       size: 80,
     },
+    // {
+    //   accessorKey: "UNIT_PRICE",
+    //   header: "Unit Price",
+    //   cell: ({ row }) => {
+    //     const role = row.original.UNIT_PRICE;
 
-    {
-      accessorKey: "UNIT_PRICE",
-      header: "Unit Price",
-      cell: ({ row }) => {
-        const role = row.original.UNIT_PRICE;
+    //     const outputText = role ?? "-";
 
-        const outputText = role ?? "-";
-
-        return <div>{outputText}</div>;
-      },
-      size: 80,
-    },
+    //     return <div>{outputText}</div>;
+    //   },
+    //   size: 80,
+    // },
     {
       accessorKey: "STOCK",
       header: "Stock",
@@ -131,7 +140,7 @@ const ProductsPage = () => {
               variant="ghost"
               className="text-blue-500 focus:bg-blue-500/10 focus:text-blue-500"
               onClick={() =>
-                router.push(current_path + `/edit/${row.original.ID}`)
+                router.push(current_path + `/edit/${row.original.CODE}`)
               }
             >
               <Pencil className="h-2 w-2" />
@@ -140,7 +149,7 @@ const ProductsPage = () => {
               variant="ghost"
               className="text-red-500 focus:bg-red-500/10 focus:text-red-500"
               onClick={() => {
-                setSelectedRow(row.original.ID);
+                setSelectedRow(row.original.CODE);
                 setShowModal(true);
               }}
             >
@@ -180,6 +189,63 @@ const ProductsPage = () => {
     }
   };
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = async (event) => {
+      const data = new Uint8Array(event.target?.result as ArrayBuffer);
+      const workbook = XLSX.read(data, { type: "array" });
+
+      const sheetName = workbook.SheetNames[0]!;
+      const sheet = workbook.Sheets[sheetName]!;
+      const rawJson =
+        XLSX.utils.sheet_to_json<Record<string, string | number>>(sheet);
+
+      const parsedData: Omit<ProductType, "ID">[] = rawJson
+        .map((row, i) => {
+          const itemCode = row["Item Code"];
+          const description = row.Description;
+          const itemCategory = row["Item Category"];
+          const baseUOM = row["Base UOM"];
+          const balanceQty = row["Balance Qty"];
+
+          if (
+            typeof itemCode === "string" &&
+            typeof description === "string" &&
+            typeof itemCategory === "string" &&
+            typeof baseUOM === "string" &&
+            (typeof balanceQty === "number" || typeof balanceQty === "string")
+          ) {
+            return {
+              CODE: itemCode,
+              NAME: description,
+              CATEGORY: itemCategory,
+              BASE_UOM: baseUOM,
+              STOCK: +balanceQty,
+            };
+          } else {
+            console.warn(`Invalid row format at index ${i}`, row);
+            return null;
+          }
+        })
+        .filter((row): row is Omit<ProductType, "ID"> => row !== null);
+
+      // Send to server
+      const promise = importMutation.mutateAsync(parsedData);
+
+      await toast.promise(promise, {
+        loading: "Importing products...",
+        success: "Products imported successfully!",
+        error: "Failed to import products",
+      });
+    };
+
+    reader.readAsArrayBuffer(file);
+  };
+
   const displayedData = isSearching ? (searchData ?? []) : (productData ?? []);
 
   return (
@@ -189,15 +255,27 @@ const ProductsPage = () => {
           <h1 className="mb-6 text-3xl">Products</h1>
 
           <div className="flex gap-2">
+            <>
+              <input
+                type="file"
+                accept=".xlsx, .xls"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              <Button onClick={() => fileInputRef.current?.click()}>
+                Import
+              </Button>
+            </>
             <Button className="mb-4" onClick={() => handleExport()}>
               Export
             </Button>
-            <Button
+            {/* <Button
               className="mb-4"
               onClick={() => router.push(current_path + "/create")}
             >
               Create Products
-            </Button>
+            </Button> */}
           </div>
         </div>
 

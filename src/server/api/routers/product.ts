@@ -4,22 +4,28 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
-import type { ProductType } from "~/lib/types";
 import { Parser } from "json2csv";
 
 export const productRouter = createTRPCRouter({
   getAll: publicProcedure.query(async ({ ctx }) => {
     const products = await ctx.db.product.findMany();
-
     return products;
   }),
 
   getOne: publicProcedure
-    .input(z.object({ id: z.number() }))
+    .input(z.object({ code: z.string() }))
     .query(async ({ input, ctx }) => {
-      const product = await ctx.db.product.findFirst({
-        where: { ID: input.id },
+      const product = await ctx.db.product.findUnique({
+        where: { CODE: input.code },
       });
+
+      if (!product) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Product not found",
+        });
+      }
+
       return product;
     }),
 
@@ -33,12 +39,12 @@ export const productRouter = createTRPCRouter({
         stock: z.number().min(0, "Stock must be a non-negative number"),
         unit_price: z
           .number()
-          .min(0, "Unit Price must be a non-negative number"),
+          .min(0, "Unit Price must be a non-negative number")
+          .optional(),
       }),
     )
-
     .mutation(async ({ input, ctx }) => {
-      const existingProduct = await ctx.db.product.findFirst({
+      const existingProduct = await ctx.db.product.findUnique({
         where: { CODE: input.code },
       });
 
@@ -51,18 +57,18 @@ export const productRouter = createTRPCRouter({
 
       const newProduct = await ctx.db.product.create({
         data: {
+          CODE: input.code,
           NAME: input.name,
           CATEGORY: input.category,
-          STOCK: input.stock,
           BASE_UOM: input.base_uom,
-          UNIT_PRICE: input.unit_price,
-          CODE: input.code,
+          STOCK: input.stock,
+          UNIT_PRICE: input.unit_price ?? 0,
         },
       });
 
       return {
         success: true,
-        message: "User created successfully",
+        message: "Product created successfully",
         product: newProduct,
       };
     }),
@@ -70,30 +76,23 @@ export const productRouter = createTRPCRouter({
   edit: publicProcedure
     .input(
       z.object({
-        id: z.number(),
+        code: z.string(),
 
-        // optional so that the admin can choose which data to change
-        code: z.string().min(1, "Code is required").optional(),
-        name: z.string().min(1, "Name is required").optional(),
-        category: z.string().min(1, "Category is required").optional(),
-        base_uom: z.string().min(1, "Base UOM is required").optional(),
-        stock: z
-          .number()
-          .min(0, "Stock must be a non-negative number")
-          .optional(),
+        name: z.string().optional(),
+        category: z.string().optional(),
+        base_uom: z.string().optional(),
+        stock: z.number().min(0, "Stock must be non-negative").optional(),
         unit_price: z
           .number()
-          .min(0, "Unit Price must be a non-negative number")
+          .min(0, "Unit Price must be non-negative")
           .optional(),
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      // finding the user using ID
       const product = await ctx.db.product.findUnique({
-        where: { ID: input.id },
+        where: { CODE: input.code },
       });
 
-      // if product does not exist, return error message
       if (!product) {
         throw new TRPCError({
           code: "NOT_FOUND",
@@ -101,55 +100,45 @@ export const productRouter = createTRPCRouter({
         });
       }
 
-      // an empty object to fill the updated data
-      const updateData: ProductType = {} as ProductType;
-
-      // checking each field to see if any of the data has been updated
-      if (input.name) updateData.NAME = input.name;
-      if (input.code) updateData.CODE = input.code;
-      if (input.category) updateData.CATEGORY = input.category;
-      if (input.base_uom) updateData.BASE_UOM = input.base_uom + "";
-      if (input.stock) updateData.STOCK = input.stock;
-      if (input.unit_price) updateData.UNIT_PRICE = input.unit_price;
-
-      // update the database using the user id
       const updatedProduct = await ctx.db.product.update({
-        where: { ID: input.id },
-        data: updateData,
+        where: { CODE: input.code },
+        data: {
+          NAME: input.name ?? product.NAME,
+          CATEGORY: input.category ?? product.CATEGORY,
+          BASE_UOM: input.base_uom ?? product.BASE_UOM,
+          STOCK: input.stock ?? product.STOCK,
+          UNIT_PRICE: input.unit_price ?? product.UNIT_PRICE,
+        },
       });
 
-      // returns true if succesfully updated
       return {
         success: true,
-        message: `Product with ID ${input.id} updated successfully.`,
-        user: updatedProduct,
+        message: `Product with code ${input.code} updated successfully.`,
+        product: updatedProduct,
       };
     }),
 
   delete: publicProcedure
-    .input(z.object({ id: z.number() })) // validate email format
+    .input(z.object({ code: z.string() }))
     .mutation(async ({ input, ctx }) => {
-      // Check if the product exists
-      const product = await ctx.db.product.findFirst({
-        where: { ID: +input.id },
+      const product = await ctx.db.product.findUnique({
+        where: { CODE: input.code },
       });
 
-      // check if the product is found
       if (!product) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "User not found",
+          message: "Product not found",
         });
       }
 
-      // Delete the product
       await ctx.db.product.delete({
-        where: { ID: input.id },
+        where: { CODE: input.code },
       });
 
       return {
         success: true,
-        message: `Product ${input.id} deleted successfully.`,
+        message: `Product ${input.code} deleted successfully.`,
       };
     }),
 
@@ -166,12 +155,64 @@ export const productRouter = createTRPCRouter({
       });
       return products;
     }),
+
   getCsv: publicProcedure.input(z.void()).query(async ({ ctx }) => {
     const data = await ctx.db.product.findMany();
+
+    if (data.length === 0) {
+      // Return CSV with only headers
+      const parser = new Parser({
+        fields: [
+          "Item Code",
+          "Description",
+          "Item Category",
+          "Base UOM",
+          "Balance Qty",
+        ], // adjust to match your schema
+      });
+      return parser.parse([]); // this will return headers only
+    }
 
     const parser = new Parser();
     const csv = parser.parse(data);
 
-    return csv ; // We'll return as string
+    return csv;
   }),
+
+  import: publicProcedure
+    .input(
+      z.array(
+        z.object({
+          CODE: z.string(),
+          NAME: z.string(),
+          CATEGORY: z.string(),
+          BASE_UOM: z.string(),
+          STOCK: z.number(),
+        }),
+      ),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const upserted = await Promise.all(
+        input.map((product) =>
+          ctx.db.product.upsert({
+            where: { CODE: product.CODE },
+            update: {
+              NAME: product.NAME,
+              CATEGORY: product.CATEGORY,
+              BASE_UOM: product.BASE_UOM,
+              STOCK: product.STOCK,
+            },
+            create: {
+              CODE: product.CODE,
+              NAME: product.NAME,
+              CATEGORY: product.CATEGORY,
+              BASE_UOM: product.BASE_UOM,
+              STOCK: product.STOCK,
+            },
+          }),
+        ),
+      );
+
+      return { count: upserted.length };
+    }),
 });

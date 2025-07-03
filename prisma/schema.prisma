@@ -41,8 +41,7 @@ model Customer {
 }
 
 model Product {
-  ID                Int                 @id @default(autoincrement())
-  CODE              String              @default("")
+  CODE              String              @id @unique @default("")
   NAME              String              @default("")
   CATEGORY          String              @default("")
   BASE_UOM          String              @default("")
@@ -55,8 +54,8 @@ model Transaction {
   ID                Int                 @id @default(autoincrement())
   DOC_NUM           String              @default("")
   TRANSACTION_DATE  DateTime            @default(now()) @db.Timestamptz(6)
-  CUSTOMER_ID       Int                 
-  ADMIN_ID          Int                 
+  CUSTOMER_ID       Int
+  ADMIN_ID          Int
   TOTAL_PRICE       Float               @default(0)
   REF_DOC_NO        String?             @default("")
   DELIVERY_DATE     DateTime?
@@ -73,10 +72,10 @@ model Transaction {
 model TransactionDetail {
   ID             Int         @id @default(autoincrement())
   TRANSACTION_ID Int
-  PRODUCT_ID     Int
+  PRODUCT_CODE   String
   QTY            Int
   UNIT_PRICE     Float
-  PRODUCT        Product     @relation(fields: [PRODUCT_ID], references: [ID])
+  PRODUCT        Product     @relation(fields: [PRODUCT_CODE], references: [CODE])
   TRANSACTION    Transaction @relation(fields: [TRANSACTION_ID], references: [ID])
 }
 

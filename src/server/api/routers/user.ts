@@ -390,24 +390,55 @@ export const userRouter = createTRPCRouter({
         customers: searchCustomerResults,
       };
     }),
+
   getCsv: publicProcedure.input(z.void()).query(async ({ ctx }) => {
     const adminData = await ctx.db.admin.findMany();
-    const userData = await ctx.db.customer.findMany();
+    const customerData = await ctx.db.customer.findMany();
 
-    // Convert each separately
-    const parser = new Parser();
-    const adminCsv = parser.parse(adminData);
-    const userCsv = parser.parse(userData);
+    const adminFields = [
+      { label: "Admin ID", value: "id" },
+      { label: "Name", value: "name" },
+      { label: "Email", value: "email" },
+      { label: "Created At", value: "createdAt" },
+    ];
 
-    // Combine with custom markers
-    const csv = [
+    const customerFields = [
+      { label: "Customer ID", value: "id" },
+      { label: "Name", value: "name" },
+      { label: "Email", value: "email" },
+      { label: "Phone", value: "phone" },
+      { label: "Registered Date", value: "createdAt" },
+    ];
+
+    const adminParser = new Parser({ fields: adminFields });
+    const customerParser = new Parser({ fields: customerFields });
+
+    // Format dates to YYYY-MM-DD for cleaner output
+    const formatDate = (d: Date) => d.toISOString().split("T")[0];
+
+    const cleanedAdmin = adminData.map((a) => ({
+      ...a,
+    }));
+
+    const cleanedCustomer = customerData.map((c) => ({
+      ...c,
+    }));
+
+    const adminCsv = adminParser.parse(
+      cleanedAdmin.length > 0 ? cleanedAdmin : [],
+    );
+    const customerCsv = customerParser.parse(
+      cleanedCustomer.length > 0 ? cleanedCustomer : [],
+    );
+
+    const combinedCsv = [
       "--- Admin Data ---",
       adminCsv,
       "",
       "--- Customer Data ---",
-      userCsv,
+      customerCsv,
     ].join("\n");
 
-    return csv;
+    return combinedCsv;
   }),
 });

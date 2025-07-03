@@ -39,7 +39,7 @@ const EditProductPage = () => {
   });
 
   const { data, isLoading } = api.product.getOne.useQuery({
-    id: params.slug ? +params.slug : -1,
+    code: params.slug![0] ?? "",
   });
 
   const isMobile = useIsMobile();
@@ -55,13 +55,12 @@ const EditProductPage = () => {
 
     await toast.promise(
       mutateAsync({
-        id: data!.ID,
         name,
         category,
         base_uom: baseUom,
         stock: +stock,
         unit_price: +unitPrice,
-        code,
+        code
       }),
       {
         loading: "Editing product...",
@@ -101,7 +100,7 @@ const EditProductPage = () => {
       <h1 className="my-0 mb-10 text-3xl lg:my-10">Edit Product</h1>
 
       <div className="flex w-full flex-col gap-6 lg:w-fit">
-        <InputWithLabel label="Code" value={code} setValue={setCode} />
+        <InputWithLabel label="Code" value={code} setValue={setCode} isDisabled/>
         <InputWithLabel label="Name" value={name} setValue={setName} />
 
         <div className="grid w-full max-w-sm items-center gap-1.5">

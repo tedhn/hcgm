@@ -183,7 +183,7 @@ export default function CreateCustomerPage() {
           <h2 className="text-lg font-semibold">Contact Info</h2>
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <Label htmlFor="EMAIL">Email (Optional)</Label>
+              <Label htmlFor="EMAIL">Email</Label>
               <Input
                 id="EMAIL"
                 name="EMAIL"
