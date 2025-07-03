@@ -6,7 +6,7 @@ import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { EmailTemplate } from "~/app/_components/email-template";
 import { Resend } from "resend";
-import type { FieldInfo, Parser } from "json2csv";
+import { type FieldInfo, Parser } from "json2csv";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
